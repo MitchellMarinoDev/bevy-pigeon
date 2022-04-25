@@ -4,4 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-
+carrier-pigeon = { git = "https://github.com/mitchellmarinodev/carrier-pigeon", rev = "e4216576b67685153b3b058920c6bf0498687632" }
+bevy = "~0.7.0"
+serde = { version = "~1.0", features = ["derive"] }
