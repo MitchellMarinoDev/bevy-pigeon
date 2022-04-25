@@ -2,6 +2,11 @@
 
 This will walk you through what you need to know to use `bevy-pigeon`.
 
+In this guide you will learn how to add Networking to your game with `bevy-pigeon`.
+
+This guide assumes some familiarity with `carrier-pigeon`. Reading `carrier-pigeon`'s quickstart
+should do it.
+
 ## NetEntity
 
 `bevy-pigeon` needs some way of knowing what entity on one game instance corresponds with what entity on another instance.
@@ -10,7 +15,7 @@ To link entities across instances, they both need to have the component `NetEnti
 
 ## NetComp
 
-The second half of the pigeon's syncing system is the component `NetComp<T, M = T>`. This is a generic component that specifies
+The second half of the pigeon's syncing system is the component `NetComp<T, M = T>`. This generic component specifies
 what component should be synced and in what direction. For instance, if you want an entity's `Transform` to be synced, you
 would add the `NetComp<Transfrom>` to it. To specify the direction to sync (***To*** the peer, or ***From*** the peer),
 you use `NetDirection`.
@@ -33,8 +38,8 @@ on the client) to specify that it should sync *to* the server.
 So back to the `NetComp` component. To sync our entity's transform from the server to the client, on the client do
 `entity.insert(NetComp::<Transform>::new(NetDirection::from()))`, or on the server do
 `entity.insert(NetComp::<Transform>::new(NetDirection::to()))`. It also needs the `NetEntity` component, so do
-`entity.insert(NetEntity::new(9414351989064014771))`. Lastly we need to tell `bevy-pigeon` that we want to sync transforms.
-When building the app, add `app.sync_comp::<Transform, Transfrom>(&mut table, Transport::UDP)` passing
+`entity.insert(NetEntity::new(9414351989064014771))`. Lastly we need to tell `bevy-pigeon` that we want it to sync
+transforms. When building the app, add `app.sync_comp::<Transform, Transfrom>(&mut table, Transport::UDP)` passing
 in a reference to your `MsgTable`. This will register the Transform type to be sent through `carrier-pigeon`.
 However, Transform doesn't implement serde's `Serialize + DeserializeOwned`. This means carrier-pigeon can't send
 this. The solution to this is make a custom type that is used as the message.
@@ -76,3 +81,8 @@ impl From<MyTransform> for Transform {
 Now, to finish up with our syncing transforms example we will change the `NetComp` as follows, to tell pigeon to use
 `MyTransform` for sending. `entity.insert(NetComp::<Transform, MyTransform>::new(NetDirection::to()))`. We must also
 change the `sync_comp` call as follows: `app.sync_comp::<Transform, MyTransform>(&mut table, Transport::UDP)`.
+
+## Cheat-Sheet
+
+To send a component that can be networked (implements `Any + Send + Sync + Serialize + DesrializeOwned`):
+
