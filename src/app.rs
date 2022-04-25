@@ -9,6 +9,7 @@ use crate::{NetComp, NetEntity};
 
 /// An extension trait for easy registering [`NetComp`] types.
 pub trait AppExt {
+    // TODO, sorted SortedMsgTable
     fn sync_comp<T, M>(&mut self, table: &mut MsgTable, transport: Transport) -> &mut Self
     where
         T: Clone + Into<M> + Component,
