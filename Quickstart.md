@@ -2,8 +2,6 @@
 
 This will walk you through what you need to know to use `bevy-pigeon`.
 
-In this guide you will learn how to add Networking to your game with `bevy-pigeon`.
-
 This guide assumes some familiarity with `carrier-pigeon`. Reading `carrier-pigeon`'s quickstart
 should do it.
 
@@ -81,8 +79,3 @@ impl From<MyTransform> for Transform {
 Now, to finish up with our syncing transforms example we will change the `NetComp` as follows, to tell pigeon to use
 `MyTransform` for sending. `entity.insert(NetComp::<Transform, MyTransform>::new(NetDirection::to()))`. We must also
 change the `sync_comp` call as follows: `app.sync_comp::<Transform, MyTransform>(&mut table, Transport::UDP)`.
-
-## Cheat-Sheet
-
-To send a component that can be networked (implements `Any + Send + Sync + Serialize + DesrializeOwned`):
-
