@@ -1,5 +1,5 @@
 //! The app extension.
-use crate::sync::{NetCompMsg, SNetDir};
+use crate::sync::{CNetDir, NetCompMsg, SNetDir};
 use bevy::prelude::*;
 use carrier_pigeon::{CId, Client, MsgRegError, MsgTable, Server, SortedMsgTable, Transport};
 use serde::de::DeserializeOwned;
@@ -99,8 +99,8 @@ impl AppExt for App {
             T: Clone + Into<M> + Component,
             M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
-        let id = concat!("bevy-pigeon::", std::any::type_name::<M>());
-        table.register::<NetCompMsg<M>>(transport, id).unwrap();
+        let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
+        table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
         self.add_system(network_comp_sys::<T, M>)
     }
 
@@ -116,8 +116,8 @@ impl AppExt for App {
             T: Clone + Into<M> + Component,
             M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
-        let id = concat!("bevy-pigeon::", std::any::type_name::<M>());
-        table.register::<NetCompMsg<M>>(transport, id)?;
+        let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
+        table.register::<NetCompMsg<M>>(transport, &*id)?;
         self.add_system(network_comp_sys::<T, M>);
         Ok(self)
     }
@@ -134,65 +134,43 @@ fn network_comp_sys<T, M>(
     if let Some(server) = server {
         let msgs: Vec<(CId, &NetCompMsg<M>)> = server.recv::<NetCompMsg<M>>().unwrap().collect();
         for (net_e, net_c, mut comp) in q.iter_mut() {
-            match net_c.dir {
-                SNetDir::From(spec) => {
-                    // Get the last message that matches with the entity and CIdSpec
-                    if let Some(&(_cid, valid_msg)) = msgs
-                        .iter()
-                        .filter(|(cid, msg)| spec.matches(*cid) && msg.id == net_e.id)
-                        .last()
-                    {
-                        *comp = valid_msg.msg.clone().into();
-                    }
+            if let Some(from_spec) = net_c.s_dir.from() {
+                if let Some(&(_cid, valid_msg)) = msgs
+                    .iter()
+                    .filter(|(cid, msg)| from_spec.matches(*cid) && msg.id == net_e.id)
+                    .last()
+                {
+                    *comp = valid_msg.msg.clone().into();
                 }
-                SNetDir::To(spec) => {
-                    if let Err(e) =
-                        server.send_spec(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()), spec)
-                    {
-                        error!("{}", e);
-                    }
+            }
+            if let Some(to_spec) = net_c.s_dir.to() {
+                if let Err(e) = server.send_spec(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()), *to_spec) {
+                    error!("{}", e);
                 }
-                SNetDir::ToFrom(to_spec, from_spec) => {
-                    if to_spec.overlaps(from_spec) {
-                        warn!("NetEntity {{ id: {} }} has overlapping `CIdSpec`s in NetDirection::ToFrom. Applying anyway.", net_e.id);
-                    }
-                    // From
-                    if let Some(&(_cid, valid_msg)) = msgs
-                        .iter()
-                        .filter(|(cid, msg)| from_spec.matches(*cid) && msg.id == net_e.id)
-                        .last()
-                    {
-                        *comp = valid_msg.msg.clone().into();
-                    }
-                    // To
-                    if let Err(e) = server.send_spec(
-                        &NetCompMsg::<M>::new(net_e.id, comp.clone().into()),
-                        to_spec,
-                    ) {
-                        error!("{}", e);
-                    }
+            }
+            // Warn on overlap
+            if let SNetDir::ToFrom(to_spec, from_spec) = net_c.s_dir {
+                if to_spec.overlaps(from_spec) {
+                    warn!("NetEntity {{ id: {} }} has overlapping `CIdSpec`s in NetDirection::ToFrom. Applying anyway.", net_e.id);
                 }
             }
         }
     } else if let Some(client) = client {
         let msgs: Vec<&NetCompMsg<M>> = client.recv::<NetCompMsg<M>>().unwrap().collect();
         for (net_e, net_c, mut comp) in q.iter_mut() {
-            match net_c.dir {
-                SNetDir::From(_) => {
+            match net_c.c_dir {
+                CNetDir::From => {
                     // Get the last message that matches with the entity and CIdSpec
                     if let Some(&valid_msg) = msgs.iter().filter(|msg| msg.id == net_e.id).last() {
                         *comp = valid_msg.msg.clone().into();
                     }
                 }
-                SNetDir::To(_) => {
+                CNetDir::To => {
                     if let Err(e) =
                         client.send(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()))
                     {
                         error!("{}", e);
                     }
-                }
-                SNetDir::ToFrom(_, _) => {
-                    error!("NetEntity {{ id: {} }} has NetDirection::ToFrom, but this is not allowed on clients.", net_e.id);
                 }
             }
         }
