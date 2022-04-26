@@ -13,8 +13,8 @@ where
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
 {
-    // TODO: Add option for changed only.
-    pub dir: NetDirection,
+    pub c_dir: CNetDir,
+    pub s_dir: SNetDir,
     _pd: PhantomData<(T, M)>,
 }
 
@@ -25,7 +25,8 @@ where
 {
     fn default() -> Self {
         NetComp {
-            dir: NetDirection::From(CIdSpec::All),
+            c_dir: CNetDir::To,
+            s_dir: SNetDir::From(CIdSpec::All),
             _pd: PhantomData,
         }
     }
@@ -37,40 +38,72 @@ where
     M: Clone + Into<T> + Any + Send + Sync,
 {
     /// Creates a new [`NetComp`] with the given [`NetDirection`].
-    pub fn new(dir: NetDirection) -> Self {
+    pub fn new(c_dir: CNetDir, s_dir: SNetDir) -> Self {
         NetComp {
-            dir,
-            _pd: PhantomData::default(),
+            c_dir,
+            s_dir,
+            _pd: PhantomData,
         }
     }
 }
 
-/// The synchronizing direction for data.
+/// Client Net Direction.
+///
+/// The synchronizing direction for data on the Client.
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
-pub enum NetDirection {
+pub enum CNetDir {
+    /// Synchronize data **to** the peer, from this instance.
+    To,
+    /// Synchronize data **from** the peer, to this instance.
+    From,
+}
+
+/// Server Net Direction.
+///
+/// The synchronizing direction for data on the Server.
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
+pub enum SNetDir {
     /// Synchronize data **to** the peer, from this instance.
     ///
-    /// On a server, the [`CIdSpec`] is used to specify who to send the data to.
+    /// The [`CIdSpec`] is used to specify who to send the data to.
     To(CIdSpec),
     /// Synchronize data **from** the peer, to this instance.
     ///
-    /// On a server, the [`CIdSpec`] is used to specify who to receive the data from.
+    /// The [`CIdSpec`] is used to specify who to receive the data from.
     From(CIdSpec),
-    /// Synchronize data to the peer, and form the peer. **This option is not valid on a client.**
+    /// Synchronize data **to** and **from** the peer, from this instance.
     ///
-    /// On a server, the [`CIdSpec`]s are used to specify who to send/receive the data to/from.
+    /// The [`CIdSpec`]s are used to specify who to send/receive the data to/from.
     ToFrom(CIdSpec, CIdSpec),
 }
 
-impl NetDirection {
+impl SNetDir {
     /// Shorthand for [`NetDirection::To(CIdSpec::All)`].
-    pub fn to() -> Self {
-        NetDirection::To(CIdSpec::All)
+    pub fn to_all() -> Self {
+        SNetDir::To(CIdSpec::All)
     }
 
     /// Shorthand for [`NetDirection::From(CIdSpec::All)`].
-    pub fn from() -> Self {
-        NetDirection::From(CIdSpec::All)
+    pub fn from_all() -> Self {
+        SNetDir::From(CIdSpec::All)
+    }
+
+    /// Gets the to component of the `SNetDir`.
+    pub fn to(&self) -> Option<&CIdSpec> {
+        match self {
+            SNetDir::To(spec) => Some(spec),
+            SNetDir::From(_) => None,
+            SNetDir::ToFrom(spec, _) => Some(spec),
+        }
+    }
+
+    /// Gets the to component of the `SNetDir`.
+    pub fn from(&self) -> Option<&CIdSpec> {
+        match self {
+            SNetDir::To(_) => None,
+            SNetDir::From(spec) => Some(spec),
+            SNetDir::ToFrom(_, spec) => Some(spec),
+        }
     }
 }
 

@@ -20,7 +20,7 @@ mod tick;
 
 pub use app::AppExt;
 pub use sync::NetComp;
-pub use sync::NetDirection;
+pub use sync::SNetDir;
 pub use sync::NetEntity;
 
 pub struct ClientPlugin;
