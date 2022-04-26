@@ -10,7 +10,7 @@ Building on `carrier-pigeon`, this crate provides high level network abstraction
 |:------:|:-------------:|:----------------:|
 |  0.7   |      0.3      |       0.3        |
 
-# Component Syncing
+## Component Syncing
 
 > "The best networking solution is one you can't see"
 
