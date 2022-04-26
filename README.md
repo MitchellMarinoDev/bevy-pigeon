@@ -5,6 +5,11 @@ The bevy plugin for `carrier-pigeon`.
 Building on `carrier-pigeon`, this crate provides high level network abstractions to allow making a game a breeze.
 `bevy-pigeon` takes care of most of the networking for you, so you barely have to see it or think about it.
 
+### Add bevy-pigeon to your `Cargo.toml`:
+```
+bevy-pigeon = "0.3.0"
+```
+
 ## Compatibility
 | `bevy` | `bevy-pigeon` | `carrier-pigeon` |
 |:------:|:-------------:|:----------------:|
