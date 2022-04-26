@@ -15,13 +15,10 @@ use crate::tick::{client_tick, server_tick};
 use bevy::prelude::*;
 
 mod app;
-mod sync;
+pub mod sync;
 mod tick;
 
 pub use app::AppExt;
-pub use sync::NetComp;
-pub use sync::SNetDir;
-pub use sync::NetEntity;
 
 pub struct ClientPlugin;
 pub struct ServerPlugin;

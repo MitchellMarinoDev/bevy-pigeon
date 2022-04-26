@@ -5,7 +5,7 @@ use carrier_pigeon::{CId, Client, MsgRegError, MsgTable, Server, SortedMsgTable,
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::any::Any;
-use crate::{NetComp, NetEntity};
+use crate::sync::{NetComp, NetEntity};
 
 /// An extension trait for easy registering [`NetComp`] types.
 pub trait AppExt {

@@ -25,8 +25,8 @@ where
 {
     fn default() -> Self {
         NetComp {
-            c_dir: CNetDir::To,
-            s_dir: SNetDir::From(CIdSpec::All),
+            c_dir: CNetDir::From,
+            s_dir: SNetDir::To(CIdSpec::All),
             _pd: PhantomData,
         }
     }
