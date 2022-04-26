@@ -5,6 +5,10 @@ This will walk you through what you need to know to use `bevy-pigeon`.
 This guide assumes some familiarity with `carrier-pigeon`. Reading `carrier-pigeon`'s quickstart
 should do it.
 
+## Plugin
+
+Firstly, you must add the plugin. Add either `ClientPlugin`, `ServerPlugin` or both.
+
 ## NetEntity
 
 `bevy-pigeon` needs some way of knowing what entity on one game instance corresponds with what entity on another instance.

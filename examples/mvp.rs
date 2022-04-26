@@ -17,6 +17,7 @@ fn main() {
     let mut app = App::new();
     let mut table = get_table();
 
+    // Tell bevy-pigeon to sync the Transform component using the NetTransform message type.
     app.sync_comp::<Transform, NetTransform>(&mut table, Transport::UDP);
 
     let parts = table.build::<Connection, Response, Disconnect>().unwrap();
@@ -42,6 +43,7 @@ fn main() {
     app.add_plugins(DefaultPlugins)
         .add_plugin(ClientPlugin)
         .add_plugin(ServerPlugin)
+
         .add_startup_system(setup)
         .add_system(handle_cons)
         .add_system(spin)
@@ -62,7 +64,7 @@ fn setup(
     // Light
     commands.insert_resource(AmbientLight {
         color: Color::ORANGE_RED,
-        brightness: 0.02,
+        brightness: 0.2,
     });
 
     // Spawn cube
