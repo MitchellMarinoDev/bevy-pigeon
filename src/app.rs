@@ -164,7 +164,7 @@ fn network_comp_sys<T, M>(
         for (net_e, net_c, mut comp, ct) in q.iter_mut() {
             // If we are using change detection, and the component hasn't been changed, skip.
             if net_c.cd && !ct.is_changed() { continue; }
-            
+
             match net_c.c_dir {
                 CNetDir::From => {
                     // Get the last message that matches with the entity and CIdSpec
