@@ -7,7 +7,8 @@ should do it.
 
 ## Plugin
 
-Firstly, you must add the plugin. Add either `ClientPlugin`, `ServerPlugin` or both.
+First, you must add the plugin. Add either `ClientPlugin`, `ServerPlugin` or both. This will automatically clear messages
+and receive new messages at the start of every frame.
 
 ## NetEntity
 
@@ -20,31 +21,30 @@ To link entities across instances, they both need to have the component `NetEnti
 The second half of the pigeon's syncing system is the component `NetComp<T, M = T>`. This generic component specifies
 what component should be synced and in what direction. For instance, if you want an entity's `Transform` to be synced, you
 would add the `NetComp<Transfrom>` to it. To specify the direction to sync (***To*** the peer, or ***From*** the peer),
-you use `NetDirection`.
+you use `NetDir` enums.
 
 ## NetDirection
 
-`NetDirection` is an enum for describing the direction of syncing. The options are `To`, `From` or `ToFrom`(both).
-Note that the `ToFrom` option is only available on the server. These enums have values letting you specify what CIds to
-sync to and from (These are only used on the server, and are completely ignored on the client).
-
-### Example
-
-Let's say you want each player to be able to control their own character. For player with connection id 1, on the server
-the direction would be `ToFrom(Except(1), Only(1))` specifying that it should sync to all clients *except* the player, and sync
-from *only* the player. The direction on the client should be `To(All)` (again the `All` could be anything as it gets ignored
-on the client) to specify that it should sync *to* the server.
+There are two NetDirection enums; one for the client, one for the server. The `CNetDir` (Client Network Direction)
+has only 2 possible values, `To` and `From`. Pretty simple; either you sync **To** the peer, or **From** the peer.
+The Server version is a little more complex. The `SNetDir` (Server Network Direction) enum has 3 values, `To(CIdSpec)`,
+`From(CIdSpec)`, and `ToFrom(CIdSpec, CIdSpec)`. A couple of differences here: we have a bonus option `ToFrom`, and 
+we have the options have `CIdSpec`s. The `CIdSpec`s specify what connection IDs to do sync to/from. For instance,
+`From(CIdSpec::Only(1))` will sync that component from only client 1. `To(CIdSpec::Except(2))` will sync to all clients
+except for client 2. `ToFrom(CIdSpec::Except(2), CIdSpec::Only(2))` will sync to all clients except for client 2, and sync
+from client 2.
 
 ## Syncing
 
 So back to the `NetComp` component. To sync our entity's transform from the server to the client, on the client do
-`entity.insert(NetComp::<Transform>::new(NetDirection::from()))`, or on the server do
-`entity.insert(NetComp::<Transform>::new(NetDirection::to()))`. It also needs the `NetEntity` component, so do
-`entity.insert(NetEntity::new(9414351989064014771))`. Lastly we need to tell `bevy-pigeon` that we want it to sync
-transforms. When building the app, add `app.sync_comp::<Transform, Transfrom>(&mut table, Transport::UDP)` passing
-in a reference to your `MsgTable`. This will register the Transform type to be sent through `carrier-pigeon`.
-However, Transform doesn't implement serde's `Serialize + DeserializeOwned`. This means carrier-pigeon can't send
-this. The solution to this is make a custom type that is used as the message.
+`entity.insert(NetComp::<Transform>::new(CNetDir::From, SNetDir::To(CIdSpec::All)))`.
+It also needs the `NetEntity` component, so do `entity.insert(NetEntity::new(9414351989064014771))`. 
+Lastly we need to tell `bevy-pigeon` that we want it to sync transforms. When building the app, add 
+`app.sync_comp::<Transform, Transfrom>(&mut table, Transport::UDP)` passing in a reference to your 
+`MsgTable`. This will add as system to send and receive these components, and register the Transform 
+type to be sent through `carrier-pigeon`. However, Transform doesn't implement serde's 
+`Serialize + DeserializeOwned`, so carrier-pigeon can't send it. The solution to this is make a custom
+type that is used as the message.
 
 ## Custom message types
 
@@ -81,5 +81,6 @@ impl From<MyTransform> for Transform {
 }
 ```
 Now, to finish up with our syncing transforms example we will change the `NetComp` as follows, to tell pigeon to use
-`MyTransform` for sending. `entity.insert(NetComp::<Transform, MyTransform>::new(NetDirection::to()))`. We must also
-change the `sync_comp` call as follows: `app.sync_comp::<Transform, MyTransform>(&mut table, Transport::UDP)`.
+`MyTransform` for sending. `entity.insert(NetComp::<Transform>::new(CNetDir::From, SNetDir::To(CIdSpec::All)))`. We must also
+change the `sync_comp` call as follows: `app.sync_comp::<Transform, MyTransform>(&mut table, Transport::UDP)`. All this
+is shown in the mvp example if you need to see it all put together.

@@ -9,7 +9,9 @@
 - [ ] Provide network-able versions of the common types.
 - [ ] Add plugin registration to doc and quickstart.
 - [ ] Fix error that the console gets spammed with.
+- [x] License. 
 
-# For v0.4.0:
+## For v0.4.0:
 - [ ] RPC like system.
+- [ ] Use carrier-pigeon's ticks to identify newer messages.
 - [ ] Ticks/fixed tick rate.
