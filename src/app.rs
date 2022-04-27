@@ -126,14 +126,18 @@ impl AppExt for App {
 fn network_comp_sys<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
-    mut q: Query<(&NetEntity, &NetComp<T, M>, &mut T)>,
+    mut q: Query<(&NetEntity, &NetComp<T, M>, &mut T, ChangeTrackers<T>)>,
 ) where
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
 {
     if let Some(server) = server {
+        // Cache messages
         let msgs: Vec<(CId, &NetCompMsg<M>)> = server.recv::<NetCompMsg<M>>().unwrap().collect();
-        for (net_e, net_c, mut comp) in q.iter_mut() {
+        for (net_e, net_c, mut comp, ct) in q.iter_mut() {
+            // If we are using change detection, and the component hasn't been changed, skip.
+            if net_c.cd && !ct.is_changed() { continue; }
+
             if let Some(from_spec) = net_c.s_dir.from() {
                 if let Some(&(_cid, valid_msg)) = msgs
                     .iter()

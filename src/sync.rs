@@ -13,7 +13,14 @@ where
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
 {
+    /// Change detection.
+    ///
+    /// If enabled, this only sends a message if the component changed.
+    /// This uses bevy's change detection, which may detect false positives.
+    pub cd: bool,
+    /// The net direction for the client.
     pub c_dir: CNetDir,
+    /// The net direction for the server.
     pub s_dir: SNetDir,
     _pd: PhantomData<(T, M)>,
 }
@@ -25,6 +32,7 @@ where
 {
     fn default() -> Self {
         NetComp {
+            cd: true,
             c_dir: CNetDir::From,
             s_dir: SNetDir::To(CIdSpec::All),
             _pd: PhantomData,
@@ -37,9 +45,10 @@ where
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
 {
-    /// Creates a new [`NetComp`] with the given [`NetDirection`].
-    pub fn new(c_dir: CNetDir, s_dir: SNetDir) -> Self {
+    /// Creates a new [`NetComp`] with the given args.
+    pub fn new(c_dir: CNetDir, s_dir: SNetDir, cd: bool) -> Self {
         NetComp {
+            cd,
             c_dir,
             s_dir,
             _pd: PhantomData,
@@ -78,12 +87,12 @@ pub enum SNetDir {
 }
 
 impl SNetDir {
-    /// Shorthand for [`NetDirection::To(CIdSpec::All)`].
+    /// Shorthand for [`SNetDir::To(CIdSpec::All)`].
     pub fn to_all() -> Self {
         SNetDir::To(CIdSpec::All)
     }
 
-    /// Shorthand for [`NetDirection::From(CIdSpec::All)`].
+    /// Shorthand for [`SNetDir::From(CIdSpec::All)`].
     pub fn from_all() -> Self {
         SNetDir::From(CIdSpec::All)
     }

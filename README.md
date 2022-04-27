@@ -6,9 +6,8 @@ Building on `carrier-pigeon`, this crate provides high level network abstraction
 `bevy-pigeon` takes care of most of the networking for you, so you barely have to see it or think about it.
 
 ### Add bevy-pigeon to your `Cargo.toml`:
-```
-bevy-pigeon = "0.3.0"
-```
+
+`bevy-pigeon = "0.3.0"`
 
 ## Compatibility
 | `bevy` | `bevy-pigeon` | `carrier-pigeon` |
