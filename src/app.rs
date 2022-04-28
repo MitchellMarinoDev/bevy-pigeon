@@ -62,7 +62,9 @@ impl AppExt for App {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         table.register::<NetCompMsg<M>>(transport).unwrap();
-        self.add_system(network_comp_sys::<T, M>)
+        self.add_system(comp_send::<T, M>);
+        self.add_system(comp_recv::<T, M>);
+        self
     }
 
     /// Adds everything needed to sync component `T` using message type `M`.
@@ -78,7 +80,8 @@ impl AppExt for App {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         table.register::<NetCompMsg<M>>(transport)?;
-        self.add_system(network_comp_sys::<T, M>);
+        self.add_system(comp_send::<T, M>);
+        self.add_system(comp_recv::<T, M>);
         Ok(self)
     }
 
@@ -101,7 +104,9 @@ impl AppExt for App {
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
-        self.add_system(network_comp_sys::<T, M>)
+        self.add_system(comp_send::<T, M>);
+        self.add_system(comp_recv::<T, M>);
+        self
     }
 
     /// Adds everything needed to sync component `T` using message type `M`.
@@ -118,15 +123,49 @@ impl AppExt for App {
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id)?;
-        self.add_system(network_comp_sys::<T, M>);
+        self.add_system(comp_send::<T, M>);
+        self.add_system(comp_recv::<T, M>);
         Ok(self)
     }
 }
 
-fn network_comp_sys<T, M>(
+fn comp_send<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
-    mut q: Query<(&NetEntity, &NetComp<T, M>, &mut T, ChangeTrackers<T>)>,
+    mut q: Query<(&NetEntity, &NetComp<T, M>, &T, ChangeTrackers<T>)>,
+) where
+    T: Clone + Into<M> + Component,
+    M: Clone + Into<T> + Any + Send + Sync,
+{
+    if let Some(server) = server {
+        for (net_e, net_c, comp, ct) in q.iter_mut() {
+            // If we are using change detection, and the component hasn't been changed, skip.
+            if net_c.cd && !ct.is_changed() { continue; }
+
+            if let Some(to_spec) = net_c.s_dir.to() {
+                if let Err(e) = server.send_spec(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()), *to_spec) {
+                    error!("{}", e);
+                }
+            }
+        }
+    } else if let Some(client) = client {
+        for (net_e, net_c, comp, ct) in q.iter_mut() {
+            // If we are using change detection, and the component hasn't been changed, skip.
+            if net_c.cd && !ct.is_changed() { continue; }
+
+            if let CNetDir::To = net_c.c_dir {
+                if let Err(e) = client.send(&NetCompMsg::<M>::new(net_e.id, comp.clone().into())) {
+                    error!("{}", e);
+                }
+            }
+        }
+    }
+}
+
+fn comp_recv<T, M>(
+    server: Option<ResMut<Server>>,
+    client: Option<ResMut<Client>>,
+    mut q: Query<(&NetEntity, &NetComp<T, M>, &mut T)>,
 ) where
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
@@ -134,10 +173,7 @@ fn network_comp_sys<T, M>(
     if let Some(server) = server {
         // Cache messages
         let msgs: Vec<(CId, &NetCompMsg<M>)> = server.recv::<NetCompMsg<M>>().unwrap().collect();
-        for (net_e, net_c, mut comp, ct) in q.iter_mut() {
-            // If we are using change detection, and the component hasn't been changed, skip.
-            if net_c.cd && !ct.is_changed() { continue; }
-
+        for (net_e, net_c, mut comp) in q.iter_mut() {
             if let Some(from_spec) = net_c.s_dir.from() {
                 if let Some(&(_cid, valid_msg)) = msgs
                     .iter()
@@ -145,11 +181,6 @@ fn network_comp_sys<T, M>(
                     .last()
                 {
                     *comp = valid_msg.msg.clone().into();
-                }
-            }
-            if let Some(to_spec) = net_c.s_dir.to() {
-                if let Err(e) = server.send_spec(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()), *to_spec) {
-                    error!("{}", e);
                 }
             }
             // Warn on overlap
@@ -161,23 +192,11 @@ fn network_comp_sys<T, M>(
         }
     } else if let Some(client) = client {
         let msgs: Vec<&NetCompMsg<M>> = client.recv::<NetCompMsg<M>>().unwrap().collect();
-        for (net_e, net_c, mut comp, ct) in q.iter_mut() {
-            // If we are using change detection, and the component hasn't been changed, skip.
-            if net_c.cd && !ct.is_changed() { continue; }
-
-            match net_c.c_dir {
-                CNetDir::From => {
-                    // Get the last message that matches with the entity and CIdSpec
-                    if let Some(&valid_msg) = msgs.iter().filter(|msg| msg.id == net_e.id).last() {
-                        *comp = valid_msg.msg.clone().into();
-                    }
-                }
-                CNetDir::To => {
-                    if let Err(e) =
-                        client.send(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()))
-                    {
-                        error!("{}", e);
-                    }
+        for (net_e, net_c, mut comp) in q.iter_mut() {
+            if net_c.c_dir == CNetDir::From {
+                // Get the last message that matches with the entity and CIdSpec
+                if let Some(&valid_msg) = msgs.iter().filter(|msg| msg.id == net_e.id).last() {
+                    *comp = valid_msg.msg.clone().into();
                 }
             }
         }

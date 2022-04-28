@@ -23,7 +23,7 @@ fn main() {
     let parts = table.build::<Connection, Response, Disconnect>().unwrap();
 
     // Multiplayer
-    let multiplayer_arg = std::env::args().nth(1).unwrap_or("client".into()).to_lowercase();
+    let multiplayer_arg = std::env::args().nth(1).unwrap_or("server".into()).to_lowercase();
     let server = multiplayer_arg == "host" || multiplayer_arg == "server";
     let client = multiplayer_arg == "host" || multiplayer_arg == "client";
 
@@ -45,7 +45,7 @@ fn main() {
         .add_plugin(ServerPlugin)
 
         .add_startup_system(setup)
-        .add_system(handle_cons)
+        .add_system(handle_discon_con)
         .add_system(spin)
         .run();
 }
@@ -98,10 +98,14 @@ fn spin(
     }
 }
 
-fn handle_cons(
+/// Handles new connections and disconnections.
+fn handle_discon_con(
     server: Option<ResMut<Server>>,
 ) {
     if let Some(mut server) = server {
         server.handle_new_cons(&mut |_cid, _c: Connection| (true, Response::Accepted));
+        server.handle_disconnects(&mut |cid, status| {
+            info!("Client {cid} disconnected with status: {status}");
+        });
     }
 }

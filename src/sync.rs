@@ -45,14 +45,21 @@ where
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
 {
-    /// Creates a new [`NetComp`] with the given args.
-    pub fn new(c_dir: CNetDir, s_dir: SNetDir, cd: bool) -> Self {
+    /// Creates a new [`NetComp`] with the given net directions.
+    /// Change detection (cd) defaults to true.
+    pub fn new(c_dir: CNetDir, s_dir: SNetDir) -> Self {
         NetComp {
-            cd,
+            cd: true,
             c_dir,
             s_dir,
             _pd: PhantomData,
         }
+    }
+
+    /// Turns off change detection.
+    pub fn no_cd(mut self) -> Self {
+        self.cd = false;
+        self
     }
 }
 
