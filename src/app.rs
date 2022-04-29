@@ -223,5 +223,6 @@ fn get_latest_msg<'a, M: Any + Send + Sync>(msgs: &'a Vec<NetMsg<NetCompMsg<M>>>
             latest = Some(m);
         }
     }
+    println!("{}", latest_time);
     latest
 }
