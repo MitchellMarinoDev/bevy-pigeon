@@ -5,10 +5,16 @@ This will walk you through what you need to know to use `bevy-pigeon`.
 This guide assumes some familiarity with `carrier-pigeon`. Reading `carrier-pigeon`'s quickstart
 should do it.
 
+## Client or Server
+
+`bevy-pigeon` systems operate on `carrier-pigeon`s Client and Server resources. You will need to create a client,
+server, or both for `bevy-pigeon`s systems to work. To do this, see `carrier-pigeon`s documentation. 
+
 ## Plugin
 
-First, you must add the plugin. Add either `ClientPlugin`, `ServerPlugin` or both. This will automatically clear messages
-and receive new messages at the start of every frame.
+You must add the plugin to the `bevy` app. Add the `ClientPlugin`, `ServerPlugin` or both. These plugins will 
+automatically clear the message buffer and receive new messages at the start of every frame. If you really want
+to do your own message clearing and receiving, just don't add these plugins.
 
 ## NetEntity
 
@@ -48,6 +54,8 @@ type that is used as the message.
 
 ## Custom message types
 
+`bevy` has a `serde` feature flag that enables serialization support for some of its types, so you should check to 
+see if the type you want to network already has serde support. This doesn't cover all types
 Sometimes, you want to use `bevy-pigeon`'s `NetComp` to easily sync your components, but the component you want
 to sync can't be sent by `carrier-pigeon`, or you want custom control over how to serialize it (to help save bandwidth).
 The solution to this is to make a custom type that can be sent by `carrier-pigeon`, and tell `bevy-pigeon` to use that.
@@ -84,3 +92,7 @@ Now, to finish up with our syncing transforms example we will change the `NetCom
 `MyTransform` for sending. `entity.insert(NetComp::<Transform>::new(CNetDir::From, SNetDir::To(CIdSpec::All)))`. We must also
 change the `sync_comp` call as follows: `app.sync_comp::<Transform, MyTransform>(&mut table, Transport::UDP)`. All this
 is shown in the mvp example if you need to see it all put together.
+
+## Example
+
+The `mvp` example is a full but sleek sample app showing all of this put together.

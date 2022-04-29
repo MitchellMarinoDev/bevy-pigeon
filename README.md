@@ -14,6 +14,13 @@ Building on `carrier-pigeon`, this crate provides high level network abstraction
 |:------:|:-------------:|:----------------:|
 |  0.7   |      0.3      |       0.3        |
 
+## Is bevy-pigeon right for me?
+
+Since carrier-pigeon uses TCP and UDP, it is usable and convenient for most all games. since bevy-pigeon only adds
+features, you have access to higher level features, but you can still just send raw carrier-pigeon messages.
+
+TCP is required for the connection cycle in carrier-pigeon, so if you want to target wasm, pigeon will not work for you.
+
 ## Component Syncing
 
 > "The best networking solution is one you can't see"
@@ -48,7 +55,8 @@ A quickstart guide that goes in more detail is found at [/Quickstart.md](Quickst
 
 ### Planned Features
 
-- [ ] RPCs
+- [ ] RPC-like system.
+- [ ] switching TCP to webrtc with a feature flag.
 
 ## Contributing
 

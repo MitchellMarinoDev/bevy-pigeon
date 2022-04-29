@@ -1,3 +1,8 @@
+//! The "Minimum Viable Product".
+//!
+//! The most minimal bevy app that shows almost all of bevy-pigeon's features without much
+//! other code to distract from the net-code.
+
 mod shared;
 
 use std::f32::consts::PI;
