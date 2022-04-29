@@ -15,6 +15,6 @@ autoexamples = false
 name = "mvp"
 
 [dependencies]
-carrier-pigeon = { git = "https://github.com/mitchellmarinodev/carrier-pigeon", rev = "e4216576b67685153b3b058920c6bf0498687632" }
+carrier-pigeon = { git = "https://github.com/mitchellmarinodev/carrier-pigeon", rev = "46d275f5ab34c0656141221b924df71fd3f510b7" }
 bevy = "~0.7.0"
 serde = { version = "~1.0", features = ["derive"] }

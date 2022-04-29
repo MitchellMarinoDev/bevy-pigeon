@@ -18,6 +18,8 @@ where
     /// If enabled, this only sends a message if the component changed.
     /// This uses bevy's change detection, which may detect false positives.
     pub cd: bool,
+    /// The timestamp of the last message received and written to this component.
+    pub last: Option<u32>,
     /// The net direction for the client.
     pub c_dir: CNetDir,
     /// The net direction for the server.
@@ -33,6 +35,7 @@ where
     fn default() -> Self {
         NetComp {
             cd: true,
+            last: None,
             c_dir: CNetDir::From,
             s_dir: SNetDir::To(CIdSpec::All),
             _pd: PhantomData,
@@ -50,6 +53,7 @@ where
     pub fn new(c_dir: CNetDir, s_dir: SNetDir) -> Self {
         NetComp {
             cd: true,
+            last: None,
             c_dir,
             s_dir,
             _pd: PhantomData,
