@@ -18,7 +18,7 @@ Building on `carrier-pigeon`, this crate provides high level network abstraction
 
 Since carrier-pigeon uses TCP and UDP, it is usable and convenient for most all games. FPS games (and other games where
 precise position is of the upmost importance) would benefit from a backroll solution like [bevy_backroll](https://crates.io/crates/bevy_backroll)
-or [bevy_ggrs](https://github.com/gschup/bevy_ggrs). Though, it is possible to make an FPS with `bevy-pigeon`
+or [bevy_ggrs](https://github.com/gschup/bevy_ggrs). Though, it is certainly possible to make an FPS with `bevy-pigeon`
 
 TCP is required for the connection cycle in carrier-pigeon, so if you want to target wasm, pigeon will not work for you.
 
@@ -46,7 +46,7 @@ A quickstart guide that goes in more detail is found at [/Quickstart.md](Quickst
 
 ### Examples
 
-- A full 2-player pong/breakout game made with `bevy-pigeon` is available on [GitHub](https://github.com/MitchellMarinoDev/bong)
+- Bong: A full 2-player pong/breakout game made with `bevy-pigeon` is available on [GitHub](https://github.com/MitchellMarinoDev/bong)
 - Check out the 
 [`examples/` directory](examples).
 
