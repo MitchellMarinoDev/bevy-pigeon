@@ -1,10 +1,11 @@
 //! The app extension.
 use crate::sync::{CNetDir, NetCompMsg, SNetDir};
 use bevy::prelude::*;
-use carrier_pigeon::{CId, Client, MsgRegError, MsgTable, Server, SortedMsgTable, Transport};
+use carrier_pigeon::{Client, MsgRegError, MsgTable, Server, SortedMsgTable, Transport};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::any::Any;
+use carrier_pigeon::net::{CIdSpec, NetMsg};
 use crate::sync::{NetComp, NetEntity};
 
 /// An extension trait for easy registering [`NetComp`] types.
@@ -165,21 +166,18 @@ fn comp_send<T, M>(
 fn comp_recv<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
-    mut q: Query<(&NetEntity, &NetComp<T, M>, &mut T)>,
+    mut q: Query<(&NetEntity, &mut NetComp<T, M>, &mut T)>,
 ) where
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
 {
     if let Some(server) = server {
         // Cache messages
-        let msgs: Vec<(CId, &NetCompMsg<M>)> = server.recv::<NetCompMsg<M>>().unwrap().collect();
-        for (net_e, net_c, mut comp) in q.iter_mut() {
-            if let Some(from_spec) = net_c.s_dir.from() {
-                if let Some(&(_cid, valid_msg)) = msgs
-                    .iter()
-                    .filter(|(cid, msg)| from_spec.matches(*cid) && msg.id == net_e.id)
-                    .last()
-                {
+        let msgs: Vec<NetMsg<NetCompMsg<M>>> = server.recv::<NetCompMsg<M>>().unwrap().collect();
+        for (net_e, mut net_c, mut comp) in q.iter_mut() {
+            if let Some(&spec) = net_c.s_dir.from() {
+                if let Some(valid_msg) = get_latest_msg(&msgs, net_c.last, spec, net_e.id) {
+                    net_c.last = valid_msg.time;
                     *comp = valid_msg.msg.clone().into();
                 }
             }
@@ -191,14 +189,40 @@ fn comp_recv<T, M>(
             }
         }
     } else if let Some(client) = client {
-        let msgs: Vec<&NetCompMsg<M>> = client.recv::<NetCompMsg<M>>().unwrap().collect();
-        for (net_e, net_c, mut comp) in q.iter_mut() {
+        let msgs: Vec<NetMsg<NetCompMsg<M>>> = client.recv::<NetCompMsg<M>>().unwrap().collect();
+        for (net_e, mut net_c, mut comp) in q.iter_mut() {
             if net_c.c_dir == CNetDir::From {
-                // Get the last message that matches with the entity and CIdSpec
-                if let Some(&valid_msg) = msgs.iter().filter(|msg| msg.id == net_e.id).last() {
+                if let Some(valid_msg) = get_latest_msg(&msgs, net_c.last, CIdSpec::All, net_e.id) {
+                    net_c.last = valid_msg.time;
+                    *comp = valid_msg.msg.clone().into();
+                }
+
+
+                if let Some(valid_msg) = msgs.iter().filter(|msg| msg.id == net_e.id).last() {
                     *comp = valid_msg.msg.clone().into();
                 }
             }
         }
     }
+}
+
+/// Gets the most recent message that matches `from_spec` for entity with `id`
+/// if it is sent later that current.
+fn get_latest_msg<'a, M: Any + Send + Sync>(msgs: &'a Vec<NetMsg<NetCompMsg<M>>>, current: Option<u32>, spec: CIdSpec, id: u64) -> Option<&'a NetMsg<'a, NetCompMsg<M>>> {
+    let mut latest_time = current.unwrap_or(0);
+    let mut latest = None;
+    for m in msgs.iter().filter(|m| spec.matches(m.cid) && m.id == id) {
+        if let Some(time) = m.time {
+            // If this packet has a send time, get the last.
+            if time > latest_time {
+                latest_time = time;
+                latest = Some(m);
+            }
+        } else {
+            // If this does not have a send time, just get the last one received.
+            latest = Some(m);
+        }
+    }
+    println!("{}", latest_time);
+    latest
 }

@@ -6,10 +6,11 @@
 - [x] Make the client and server directions different.
 - [ ] Integration with events.
 - [ ] Change detection.
-- [ ] Provide network-able versions of the common types.
+- [x] Provide network-able versions of the common types.
 - [x] Add plugin registration to doc and quickstart.
 - [x] Fix error that the console gets spammed with.
 - [x] License. 
+- [ ] Cargo deny.
 
 ## For v0.4.0:
 - [ ] RPC like system.

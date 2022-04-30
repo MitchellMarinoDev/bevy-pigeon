@@ -1,6 +1,6 @@
 # bevy-pigeon
 
-The bevy plugin for `carrier-pigeon`.
+The bevy plugin for [`carrier-pigeon`](https://github.com/MitchellMarinoDev/carrier-pigeon).
 
 Building on `carrier-pigeon`, this crate provides high level network abstractions to allow making a game a breeze.
 `bevy-pigeon` takes care of most of the networking for you, so you barely have to see it or think about it.
@@ -16,8 +16,9 @@ Building on `carrier-pigeon`, this crate provides high level network abstraction
 
 ## Is bevy-pigeon right for me?
 
-Since carrier-pigeon uses TCP and UDP, it is usable and convenient for most all games. since bevy-pigeon only adds
-features, you have access to higher level features, but you can still just send raw carrier-pigeon messages.
+Since carrier-pigeon uses TCP and UDP, it is usable and convenient for most all games. FPS games (and other games where
+precise position is of the upmost importance) would benefit from a backroll solution like [bevy_backroll](https://crates.io/crates/bevy_backroll)
+or [bevy_ggrs](https://github.com/gschup/bevy_ggrs). Though, it is certainly possible to make an FPS with `bevy-pigeon`
 
 TCP is required for the connection cycle in carrier-pigeon, so if you want to target wasm, pigeon will not work for you.
 

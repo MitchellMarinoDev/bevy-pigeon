@@ -17,6 +17,7 @@ use bevy::prelude::*;
 mod app;
 pub mod sync;
 mod tick;
+mod types;
 
 pub use app::AppExt;
 
