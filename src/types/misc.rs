@@ -8,6 +8,8 @@
 //! - [AlphaMode]
 //! - [EulerRot]
 
+// TODO: more transforms.
+
 use serde::{Serialize, Deserialize};
 use bevy::reflect::FromReflect;
 use bevy::prelude::*;

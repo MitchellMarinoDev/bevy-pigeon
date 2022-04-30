@@ -10,7 +10,8 @@ use bevy::prelude::*;
 use carrier_pigeon::{Client, Server, Transport};
 use bevy_pigeon::{AppExt, ClientPlugin, ServerPlugin};
 use bevy_pigeon::sync::{NetComp, NetEntity};
-use crate::shared::{Connection, Disconnect, get_table, NetTransform, Response};
+use bevy_pigeon::types::NetTransform;
+use crate::shared::*;
 
 const ADDR_LOCAL: &str = "127.0.0.1:7777";
 

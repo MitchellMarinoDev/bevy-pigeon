@@ -14,6 +14,9 @@ autoexamples = false
 [[example]]
 name = "mvp"
 
+[[example]]
+name = "player"
+
 [dependencies]
 carrier-pigeon = { git = "https://github.com/mitchellmarinodev/carrier-pigeon", rev = "70c365451fddb7de3dc4d3c856e9b3afdf014680" }
 bevy = "~0.7.0"
