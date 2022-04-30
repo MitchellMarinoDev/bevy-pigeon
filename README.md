@@ -46,8 +46,7 @@ A quickstart guide that goes in more detail is found at [/Quickstart.md](Quickst
 ### Examples
 
 - A full 2-player pong/breakout game made with `bevy-pigeon` is available on [GitHub](https://github.com/MitchellMarinoDev/bong)
-- Check out the 
-[`examples/` directory](examples).
+- Check out the [`examples/` directory](examples).
 
 ## Features
 
@@ -55,7 +54,6 @@ A quickstart guide that goes in more detail is found at [/Quickstart.md](Quickst
 
 ### Planned Features
 
-- [ ] RPC-like system.
 - [ ] switching TCP to webrtc with a feature flag.
 
 ## Contributing

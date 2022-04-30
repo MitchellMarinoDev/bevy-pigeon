@@ -95,4 +95,4 @@ is shown in the mvp example if you need to see it all put together.
 
 ## Example
 
-The `mvp` example is a full but sleek sample app showing all of this put together.
+The `mvp` example is a sleek sample app showing all of this put together.
