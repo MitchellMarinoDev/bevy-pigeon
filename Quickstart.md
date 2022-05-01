@@ -7,12 +7,13 @@ should do it.
 
 ## Client or Server
 
-`bevy-pigeon` systems operate on `carrier-pigeon`s Client and Server resources. You will need to create a client,
-server, or both for `bevy-pigeon`s systems to work. To do this, see `carrier-pigeon`s documentation. 
+`bevy-pigeon` systems operate on `carrier-pigeon`s Client and Server as resources. You will need to create a client,
+server, or both and add them to the app's resources in order for `bevy-pigeon`s systems to work. 
+To do this, see `carrier-pigeon`s documentation. 
 
 ## Plugin
 
-You must add the plugin to the `bevy` app. Add the `ClientPlugin`, `ServerPlugin` or both. These plugins will 
+You must add the plugin to the app. Add the `ClientPlugin`, `ServerPlugin` or both. These plugins will 
 automatically clear the message buffer and receive new messages at the start of every frame. If you really want
 to do your own message clearing and receiving, just don't add these plugins.
 
