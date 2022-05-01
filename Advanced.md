@@ -75,3 +75,6 @@ be synced to the same transform).
 - If the 2 entities with the id collision have different synced components (i.e. a bottle syncing water level and
 a bullet syncing transform), then this will probably behave normally.
 
+## Labels.
+
+Networking systems are labeled with the `NetLabel` label.

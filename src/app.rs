@@ -8,37 +8,52 @@ use std::any::Any;
 use carrier_pigeon::net::{CIdSpec, NetMsg};
 use crate::sync::{NetComp, NetEntity};
 
-#[derive(Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Debug, Default)]
+/// A label that is applied to all networking systems.
+#[derive(SystemLabel, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Default, Hash)]
+pub struct NetLabel;
+
+/// The client plugin.
+///
+/// Automatically clears client's message buffer and receive new messages at the start of
+/// every frame.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Default, Hash)]
 pub struct ClientPlugin;
-#[derive(Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Debug, Default)]
+
+/// The server plugin.
+///
+/// Automatically clears server's message buffer and receive new messages at the start of
+/// every frame.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Default, Hash)]
 pub struct ServerPlugin;
 
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::First, client_tick);
+        app.add_system_to_stage(CoreStage::First, client_tick.label(NetLabel));
     }
 }
 
 impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::First, server_tick);
+        app.add_system_to_stage(CoreStage::First, server_tick.label(NetLabel));
     }
 }
 
-
-pub fn client_tick(client: Option<ResMut<Client>>) {
+/// Clears client's message buffer and receive new messages.
+fn client_tick(client: Option<ResMut<Client>>) {
     if let Some(mut client) = client {
         client.clear_msgs();
         client.recv_msgs();
     }
 }
 
-pub fn server_tick(server: Option<ResMut<Server>>) {
+/// Clears server's message buffer and receive new messages.
+fn server_tick(server: Option<ResMut<Server>>) {
     if let Some(mut server) = server {
         server.clear_msgs();
         server.recv_msgs();
     }
 }
+
 
 /// An extension trait for easy registering [`NetComp`] types.
 pub trait AppExt {
@@ -95,8 +110,8 @@ impl AppExt for App {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         table.register::<NetCompMsg<M>>(transport).unwrap();
-        self.add_system(comp_send::<T, M>);
-        self.add_system(comp_recv::<T, M>);
+        self.add_system(comp_send::<T, M>.label(NetLabel));
+        self.add_system(comp_recv::<T, M>.label(NetLabel));
         self
     }
 
@@ -113,8 +128,8 @@ impl AppExt for App {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         table.register::<NetCompMsg<M>>(transport)?;
-        self.add_system(comp_send::<T, M>);
-        self.add_system(comp_recv::<T, M>);
+        self.add_system(comp_send::<T, M>.label(NetLabel));
+        self.add_system(comp_recv::<T, M>.label(NetLabel));
         Ok(self)
     }
 
@@ -137,8 +152,8 @@ impl AppExt for App {
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
-        self.add_system(comp_send::<T, M>);
-        self.add_system(comp_recv::<T, M>);
+        self.add_system(comp_send::<T, M>.label(NetLabel));
+        self.add_system(comp_recv::<T, M>.label(NetLabel));
         self
     }
 
@@ -156,8 +171,8 @@ impl AppExt for App {
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id)?;
-        self.add_system(comp_send::<T, M>);
-        self.add_system(comp_recv::<T, M>);
+        self.add_system(comp_send::<T, M>.label(NetLabel));
+        self.add_system(comp_recv::<T, M>.label(NetLabel));
         Ok(self)
     }
 }

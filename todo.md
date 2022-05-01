@@ -9,8 +9,8 @@
 - [x] Add plugin registration to doc and quickstart.
 - [x] Fix error that the console gets spammed with.
 - [x] License. 
-- [ ] Label systems.
-- [ ] Advanced guide.
+- [x] Label systems.
+- [x] Advanced guide.
 - [ ] To add a way to send a sync message ignoring the change detection likely through an event.
 
 ## For v0.4.0:
