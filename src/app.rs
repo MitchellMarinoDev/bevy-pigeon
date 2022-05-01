@@ -8,6 +8,38 @@ use std::any::Any;
 use carrier_pigeon::net::{CIdSpec, NetMsg};
 use crate::sync::{NetComp, NetEntity};
 
+#[derive(Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Debug, Default)]
+pub struct ClientPlugin;
+#[derive(Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Debug, Default)]
+pub struct ServerPlugin;
+
+impl Plugin for ClientPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_to_stage(CoreStage::First, client_tick);
+    }
+}
+
+impl Plugin for ServerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_to_stage(CoreStage::First, server_tick);
+    }
+}
+
+
+pub fn client_tick(client: Option<ResMut<Client>>) {
+    if let Some(mut client) = client {
+        client.clear_msgs();
+        client.recv_msgs();
+    }
+}
+
+pub fn server_tick(server: Option<ResMut<Server>>) {
+    if let Some(mut server) = server {
+        server.clear_msgs();
+        server.recv_msgs();
+    }
+}
+
 /// An extension trait for easy registering [`NetComp`] types.
 pub trait AppExt {
     fn sync_comp<T, M>(

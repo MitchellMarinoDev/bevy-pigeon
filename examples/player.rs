@@ -550,7 +550,7 @@ mod game {
                     server.send_to(&NewPlayer(*p_cid), cid).unwrap();
                 }
                 // Tell the other players about the new player.
-                server.send_spec(&NewPlayer(cid), CIdSpec::Except(cid));
+                server.send_spec(&NewPlayer(cid), CIdSpec::Except(cid)).unwrap();
 
                 players.0.insert(cid, user);
 

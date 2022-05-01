@@ -11,27 +11,8 @@
 //! [`examples/` directory](https://github.com/MitchellMarinoDev/carrier-pigeon/blob/main/examples)
 //! on the GitHub repo.
 
-use crate::tick::{client_tick, server_tick};
-use bevy::prelude::*;
-
 mod app;
 pub mod sync;
-mod tick;
 pub mod types;
 
-pub use app::AppExt;
-
-pub struct ClientPlugin;
-pub struct ServerPlugin;
-
-impl Plugin for ClientPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::First, client_tick);
-    }
-}
-
-impl Plugin for ServerPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::First, server_tick);
-    }
-}
+pub use app::{AppExt, ClientPlugin, ServerPlugin};
