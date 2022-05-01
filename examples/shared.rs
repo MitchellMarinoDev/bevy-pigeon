@@ -2,7 +2,7 @@
 //! Contains things like messages that can be useful for multiple examples.
 
 use serde::{Serialize, Deserialize};
-use carrier_pigeon::MsgTable;
+use carrier_pigeon::{CId, MsgTable};
 
 pub fn get_table() -> MsgTable {
     let table = MsgTable::new();
@@ -14,14 +14,14 @@ pub fn get_table() -> MsgTable {
 /// The connection message.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct Connection {
-    user: String,
-    pass: Option<String>,
+    pub user: String,
+    pub pass: String,
 }
 
 impl Connection {
-    pub fn new(user: impl Into<String>, pass: Option<impl Into<String>>) -> Connection {
+    pub fn new(user: impl Into<String>, pass: impl Into<String>) -> Connection {
         let user = user.into();
-        let pass = pass.map(|i| i.into());
+        let pass = pass.into();
         Connection { user, pass }
     }
 }
@@ -29,7 +29,7 @@ impl Connection {
 /// The response message.
 #[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Response {
-    Accepted,
+    Accepted(CId),
     Rejected(RejectReason),
 }
 

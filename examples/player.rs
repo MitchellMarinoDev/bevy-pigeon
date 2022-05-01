@@ -1,27 +1,29 @@
 //! A multiplayer "game" where you control a character.
 //!
-//! A simple example where every client spawns a player, despawning it when they disconnect.
-//! This is a little more of an in depth than the `mvp` example. It shows connection validation,
+//! A simple example where every client connection spawns a player, despawning it when they disconnect.
+//! This is more in depth than the `mvp` example. It shows connection validation,
 //! and doing something on a disconnect.
 
 use std::net::SocketAddr;
 use bevy::prelude::*;
-use carrier_pigeon::Transport;
+use carrier_pigeon::{CId, Transport};
 use bevy_pigeon::{AppExt, ClientPlugin, ServerPlugin};
 use bevy_pigeon::types::NetTransform;
 use crate::connecting::ConnectingPlugin;
 use crate::game::GamePlugin;
 use crate::menu::MenuPlugin;
 use crate::shared::*;
+use serde::{Serialize, Deserialize};
 
 mod shared;
 
 const ADDR_LOCAL: &str = "127.0.0.1:7777";
 
+#[derive(Clone, Eq, PartialEq, Debug)]
 struct Config {
     ip: SocketAddr,
     user: String,
-    pass: Option<String>,
+    pass: String,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Hash)]
@@ -31,14 +33,23 @@ enum GameState {
     Game,
 }
 
+#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
+struct NewPlayer(CId);
+
+#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
+struct DelPlayer(CId);
+
 fn main() {
     let mut app = App::new();
     let mut table = get_table();
 
+    table.register::<NewPlayer>(Transport::TCP).unwrap();
+    table.register::<DelPlayer>(Transport::TCP).unwrap();
+
     // Get IP addr
     let ip: SocketAddr = std::env::args().nth(1).unwrap_or(ADDR_LOCAL.into()).parse().expect("please enter a valid ip address and port. Ex. `192.168.0.99:4455`");
-    let user = std::env::args().nth(1).unwrap_or("Player".into());
-    let pass = std::env::args().nth(1);
+    let user = std::env::args().nth(2).unwrap_or("Player".into());
+    let pass = std::env::args().nth(3).unwrap_or(String::new());
     let conf = Config { ip, user, pass };
     app.insert_resource(conf);
 
@@ -63,9 +74,10 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     // Camera
-    let mut camera = OrthographicCameraBundle::new_3d();
-    camera.transform = Transform::from_xyz(0.0, 4.0, -4.0);
-    commands.spawn_bundle(camera);
+    commands.spawn_bundle(PerspectiveCameraBundle {
+        transform: Transform::from_xyz(0.0, 10.0, 10.0).looking_at(Vec3::default(), Vec3::Y),
+        ..PerspectiveCameraBundle::new_3d()
+    });
 
     // UI Camera
     commands.spawn_bundle(UiCameraBundle::default());
@@ -82,6 +94,7 @@ mod menu {
     use bevy::prelude::*;
     use carrier_pigeon::{Client, MsgTableParts, Server};
     use crate::{clean_up, Config, Connection, GameState, SystemSet};
+    use crate::connecting::MyCId;
     use crate::GameState::Menu;
 
     /// A marker component so that we can clean up easily.
@@ -134,6 +147,7 @@ mod menu {
                         commands.insert_resource(server);
                         let client = Client::new(conf.ip, (*parts).clone(), Connection::new(conf.user.clone(), conf.pass.clone()));
                         commands.insert_resource(client.option());
+                        commands.insert_resource(MyCId(1));
                     }
                     MenuButton::Client => {
                         let client = Client::new(conf.ip, (*parts).clone(), Connection::new(conf.user.clone(), conf.pass.clone()));
@@ -267,9 +281,12 @@ mod menu {
 
 mod connecting {
     use bevy::prelude::*;
-    use carrier_pigeon::{OptionPendingClient};
+    use carrier_pigeon::{CId, OptionPendingClient, Server};
     use crate::{clean_up, GameState, Response};
     use crate::GameState::Connecting;
+
+    #[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
+    pub struct MyCId(pub CId);
 
     /// A marker component so that we can clean up easily.
     #[derive(Copy, Clone, Eq, PartialEq, Debug, Hash, Component)]
@@ -297,11 +314,12 @@ mod connecting {
 
     fn check_connecting(
         mut commands: Commands,
+        server: Option<Res<Server>>,
         client: Option<ResMut<OptionPendingClient>>,
         mut game_state: ResMut<State<GameState>>
     ) {
-        if client.is_none() {
-            // No client (server only). No Connecting needed.
+        if server.is_some() {
+            // If we have a server, no need to connect.
             let _ = game_state.set(GameState::Game);
             return;
         }
@@ -311,9 +329,10 @@ mod connecting {
             let con_result = client.take::<Response>().unwrap();
             let (client, response) = con_result.expect("IO Error occurred while connecting.");
             match response {
-                Response::Accepted => {
-                    println!("Connection successful");
+                Response::Accepted(cid) => {
+                    println!("Connection successful. Our CId {cid}");
                     commands.insert_resource(client);
+                    commands.insert_resource(MyCId(cid));
                     let _ = game_state.set(GameState::Game);
                     commands.remove_resource::<OptionPendingClient>();
                 }
@@ -378,8 +397,27 @@ mod connecting {
 
 mod game {
     use bevy::prelude::*;
-    use crate::{clean_up, SystemSet};
+    use bevy::utils::HashMap;
+    use carrier_pigeon::{CId, Client, Server};
+    use carrier_pigeon::net::CIdSpec;
+    use carrier_pigeon::net::CIdSpec::{Except, Only};
+    use bevy_pigeon::sync::{CNetDir, NetComp, NetEntity, SNetDir};
+    use bevy_pigeon::types::NetTransform;
+    use crate::{clean_up, Config, Connection, DelPlayer, NewPlayer, RejectReason, Response, SystemSet};
+    use crate::connecting::MyCId;
     use crate::GameState::Game;
+
+    /// A marker component for a player.
+    #[derive(Clone, Debug, Default, Component)]
+    struct Player;
+
+    /// A marker component for a player.
+    #[derive(Clone, Debug, Default, Component)]
+    struct MyPlayer;
+
+    /// Maps a connection ID to a username.
+    #[derive(Clone, Debug, Default)]
+    struct Players(pub HashMap<CId, String>);
 
     /// A marker component so that we can clean up easily.
     #[derive(Copy, Clone, Eq, PartialEq, Debug, Hash, Component)]
@@ -389,12 +427,16 @@ mod game {
     impl Plugin for GamePlugin {
         fn build(&self, app: &mut App) {
             app
+                .insert_resource(Players::default())
                 .add_system_set(
                     SystemSet::on_enter(Game)
                         .with_system(setup_game)
                 )
                 .add_system_set(
                     SystemSet::on_update(Game)
+                        .with_system(handle_cons)
+                        .with_system(add_del_players)
+                        .with_system(move_player)
                 )
                 .add_system_set(
                     SystemSet::on_exit(Game)
@@ -405,8 +447,156 @@ mod game {
     }
 
     fn setup_game(
-
+        my_cid: Option<Res<MyCId>>,
+        mut commands: Commands,
+        mut meshes: ResMut<Assets<Mesh>>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
+        // Ground plane.
+        commands.spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Plane { size: 10.0 })),
+            material: materials.add(StandardMaterial {
+                base_color: Color::WHITE,
+                perceptual_roughness: 1.0,
+                ..default()
+            }),
+            ..default()
+        });
+
+        if let Some(cid) = my_cid {
+            println!("setup");
+            spawn_player(cid.0, true, &mut commands, &mut *meshes, &mut *materials);
+        }
+    }
+
+    fn add_del_players(
+        mut commands: Commands,
+        client: Option<Res<Client>>,
+        q_player: Query<(Entity, &NetEntity), With<Player>>,
+        // For spawning player
+        mut meshes: ResMut<Assets<Mesh>>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+    ) {
+        if let Some(client) = client {
+            for msg in client.recv::<DelPlayer>().unwrap() {
+                if let Some((entity, _net_e)) = q_player.iter().filter(|(_e, net_e)| net_e.id == msg.0 as u64).next() {
+                    commands.entity(entity).despawn_recursive();
+                }
+            }
+
+            for msg in client.recv::<NewPlayer>().unwrap() {
+                spawn_player(msg.0, false, &mut commands, &mut *meshes, &mut *materials);
+            }
+        }
+    }
+
+    fn move_player(
+        mut q_player: Query<&mut Transform, With<MyPlayer>>,
+        time: Res<Time>,
+        input: Res<Input<KeyCode>>,
+    ) {
+        if let Ok(mut transform) = q_player.get_single_mut() {
+            if input.pressed(KeyCode::W) || input.pressed(KeyCode::Up) {
+                transform.translation -= Vec3::new(0.0, 0.0, 1.0) * time.delta_seconds();
+            }
+            if input.pressed(KeyCode::S) || input.pressed(KeyCode::Down) {
+                transform.translation += Vec3::new(0.0, 0.0, 1.0) * time.delta_seconds();
+            }
+            if input.pressed(KeyCode::A) || input.pressed(KeyCode::Left) {
+                transform.translation -= Vec3::new(1.0, 0.0, 0.0) * time.delta_seconds();
+            }
+            if input.pressed(KeyCode::D) || input.pressed(KeyCode::Right) {
+                transform.translation += Vec3::new(1.0, 0.0, 0.0) * time.delta_seconds();
+            }
+        }
+    }
+
+    fn handle_cons(
+        my_cid: Option<Res<MyCId>>,
+        conf: Res<Config>,
+        mut players: ResMut<Players>,
+        server: Option<ResMut<Server>>,
+        // For spawning player
+        mut commands: Commands,
+        mut meshes: ResMut<Assets<Mesh>>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+    ) {
+        if let Some(mut server) = server {
+            let mut discon = vec![];
+            server.handle_disconnects(&mut |cid, status| {
+                info!("Connection {cid} disconnected with status: \"{status}\"");
+                discon.push(cid);
+            });
+            for cid in discon {
+                server.broadcast(&DelPlayer(cid)).unwrap();
+                players.0.remove(&cid);
+            }
+
+            let mut new_players = vec![];
+            server.handle_new_cons(&mut |cid, con: Connection| {
+                if con.pass != conf.pass {
+                    (false, Response::Rejected(RejectReason::IncorrectPassword))
+                } else if players.0.len() > 2 {
+                    (false, Response::Rejected(RejectReason::MaxPlayersReached))
+                } else {
+                    new_players.push((cid, con.user));
+                    (true, Response::Accepted(cid))
+                }
+            });
+
+            for (cid, user) in new_players {
+                // Tell the new client about all the existing clients.
+                for p_cid in players.0.keys() {
+                    server.send_to(&NewPlayer(*p_cid), cid).unwrap();
+                }
+                // Tell the other players about the new player.
+                server.send_spec(&NewPlayer(cid), CIdSpec::Except(cid));
+
+                players.0.insert(cid, user);
+
+                // Stops the host from spawning two players for itself.
+                if my_cid.is_some() && my_cid.as_ref().unwrap().0 != cid {
+                    spawn_player(cid, false, &mut commands, &mut *meshes, &mut *materials);
+                }
+            }
+        }
+    }
+
+    fn spawn_player(
+        cid: CId,
+        my_player: bool,
+        commands: &mut Commands,
+        meshes: &mut Assets<Mesh>,
+        materials: &mut Assets<StandardMaterial>,
+    ) {
+        info!("Spawning player. CId: {cid}, mine? {my_player}.");
+
+        let net_comp = if my_player {
+            NetComp::<Transform, NetTransform>::new(CNetDir::To, SNetDir::ToFrom(Except(cid), Only(cid)))
+        } else {
+            NetComp::<Transform, NetTransform>::new(CNetDir::From, SNetDir::ToFrom(Except(cid), Only(cid)))
+        };
+
+        let id =
+        commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                material: materials.add(StandardMaterial {
+                    base_color: Color::PINK,
+                    ..default()
+                }),
+                transform: Transform::from_xyz(0.0, 0.5, 0.0),
+                ..default()
+            })
+            .insert(NetEntity::new(cid as u64))
+            .insert(net_comp)
+            .insert(GameItem)
+            .insert(Player)
+            .id();
+
+        if my_player {
+            commands.entity(id).insert(MyPlayer);
+        }
 
     }
 }
