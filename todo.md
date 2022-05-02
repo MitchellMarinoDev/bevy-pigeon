@@ -1,6 +1,6 @@
 # TODO:
 - [ ] Resolve // TODO:s
-- [ ] Look for unwraps that may panic.
+- [x] Look for unwraps that may panic.
 - [x] Make examples.
 - [x] Work on Quickstart.md
 - [x] Make the client and server directions different.
@@ -14,6 +14,4 @@
 - [ ] To add a way to send a sync message ignoring the change detection likely through an event.
 
 ## For v0.4.0:
-- [ ] RPC like system.
-- [ ] Use carrier-pigeon's ticks to identify newer messages.
-- [ ] Ticks/fixed tick rate.
+- [ ] Messages that only overwrite some data (requires custom trait).

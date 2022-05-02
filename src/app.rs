@@ -236,6 +236,7 @@ fn comp_recv<T, M>(
             }
         }
     } else if let Some(client) = client {
+        // Cache messages
         let msgs: Vec<NetMsg<NetCompMsg<M>>> = client.recv::<NetCompMsg<M>>().unwrap().collect();
         for (net_e, mut net_c, mut comp) in q.iter_mut() {
             if net_c.c_dir == CNetDir::From {
