@@ -16,6 +16,8 @@
 
 mod light;
 mod misc;
+mod transform;
 
+pub use transform::*;
 pub use light::*;
 pub use misc::*;

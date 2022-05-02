@@ -8,44 +8,10 @@
 //! - [AlphaMode]
 //! - [EulerRot]
 
-// TODO: more transforms.
-
 use serde::{Serialize, Deserialize};
 use bevy::reflect::FromReflect;
 use bevy::prelude::*;
 use bevy::render::camera::{DepthCalculation, ScalingMode, WindowOrigin};
-
-/// The network-able version of [Transform].
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
-pub struct NetTransform {
-    /// Position of the entity. In 2d, the last value of the `Vec3` is used for z-ordering.
-    pub translation: Vec3,
-    /// Rotation of the entity.
-    pub rotation: Quat,
-    /// Scale of the entity.
-    pub scale: Vec3,
-}
-
-impl From<Transform> for NetTransform {
-    fn from(o: Transform) -> Self {
-        NetTransform {
-            translation: o.translation,
-            rotation: o.rotation,
-            scale: o.scale,
-        }
-    }
-}
-
-impl From<NetTransform> for Transform {
-    fn from(o: NetTransform) -> Self {
-        Transform {
-            translation: o.translation,
-            rotation: o.rotation,
-            scale: o.scale,
-        }
-    }
-}
 
 /// The network-able version of [OrthographicProjection].
 #[derive(Debug, Clone, Serialize, Deserialize, Reflect)]

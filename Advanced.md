@@ -4,6 +4,50 @@ This will walk you through the more advanced features of `bevy-pigeon`.
 
 This guide assumes you've read and understand the Quickstart Guide.
 
+## Custom message types
+
+`bevy` has a `serde` feature flag that enables serialization support for some of its types, so you should check to
+see if the type you want to network already has serde support. `bevy-pigeon` also provides multiple network-able 
+versions of non-network-able types in the `bevy_pigeon::types` module. If this doesn't capture your use case, continue
+reading.
+
+Sometimes, you want to use `bevy-pigeon`'s `NetComp` to easily sync your components, but the component you want to sync
+can't be sent by `carrier-pigeon` for whatever reason (contains references, isn't serializable ...). Or maybe you want 
+custom control over how to serialize it (to help save bandwidth). The solution to this is to make a custom type that 
+can be sent by `carrier-pigeon`, and tell `bevy-pigeon` to use that. 
+
+For example, to send Transforms:
+```rust
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
+pub struct MyNetTransform {
+    pub translation: Vec3,
+    pub rotation: Quat,
+    // If you dont use scale, it can be taken out to reduce bandwidth.
+}
+
+// You must impl these conversion types so `pigeon` can convert it.
+impl From<Transform> for MyNetTransform {
+    fn from(o: Transform) -> Self {
+        MyNetTransform {
+            translation: o.translation,
+            rotation: o.rotation,
+        }
+    }
+}
+
+impl From<MyNetTransform> for Transform {
+    fn from(o: MyNetTransform) -> Self {
+        Transform {
+            translation: o.translation,
+            rotation: o.rotation,
+            ..default()
+        }
+    }
+}
+```
+
+You can look at the types in the `bevy_pigeon::types` module for more examples.
+
 ## Change Detection.
 
 Change detection is an optimization were the sync messages are only sent if the component changes. It uses bevy's
