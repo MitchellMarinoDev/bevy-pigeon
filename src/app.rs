@@ -5,8 +5,19 @@ use carrier_pigeon::{Client, MsgRegError, MsgTable, Server, SortedMsgTable, Tran
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::any::Any;
+use std::marker::PhantomData;
 use carrier_pigeon::net::{CIdSpec, NetMsg};
 use crate::sync::{NetComp, NetEntity};
+
+/// An event that forces a sync of component `T`.
+///
+/// This can be used if you need to force a sync of component `T` with message type `M`.
+/// This is most useful if you are using the change detection; you may want to force a sync
+/// of components when a new client joins.
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug, Default)]
+pub struct SyncC<T, M = T> {
+    _pd: PhantomData<(T, M)>,
+}
 
 /// A label that is applied to all networking systems.
 #[derive(SystemLabel, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Default, Hash)]
@@ -110,6 +121,9 @@ impl AppExt for App {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         table.register::<NetCompMsg<M>>(transport).unwrap();
+
+        self.add_event::<SyncC<T, M>>();
+        self.add_system(send_on_event::<T, M>.label(NetLabel));
         self.add_system(comp_send::<T, M>.label(NetLabel));
         self.add_system(comp_recv::<T, M>.label(NetLabel));
         self
@@ -128,6 +142,9 @@ impl AppExt for App {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         table.register::<NetCompMsg<M>>(transport)?;
+
+        self.add_event::<SyncC<T, M>>();
+        self.add_system(send_on_event::<T, M>.label(NetLabel));
         self.add_system(comp_send::<T, M>.label(NetLabel));
         self.add_system(comp_recv::<T, M>.label(NetLabel));
         Ok(self)
@@ -152,6 +169,9 @@ impl AppExt for App {
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
+
+        self.add_event::<SyncC<T, M>>();
+        self.add_system(send_on_event::<T, M>.label(NetLabel));
         self.add_system(comp_send::<T, M>.label(NetLabel));
         self.add_system(comp_recv::<T, M>.label(NetLabel));
         self
@@ -171,22 +191,56 @@ impl AppExt for App {
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id)?;
+
+        self.add_event::<SyncC<T, M>>();
+        self.add_system(send_on_event::<T, M>.label(NetLabel));
         self.add_system(comp_send::<T, M>.label(NetLabel));
         self.add_system(comp_recv::<T, M>.label(NetLabel));
         Ok(self)
     }
 }
 
+fn send_on_event<T, M>(
+    mut er: EventReader<SyncC<T, M>>,
+    server: Option<ResMut<Server>>,
+    client: Option<ResMut<Client>>,
+    q: Query<(&NetEntity, &NetComp<T, M>, &T)>,
+) where
+    T: Clone + Into<M> + Component,
+    M: Clone + Into<T> + Any + Send + Sync,
+{
+    if er.iter().count() == 0 { return; }
+
+    // Almost copy-paste from [`comp_send`] ignoring change detection
+    if let Some(server) = server {
+        for (net_e, net_c, comp) in q.iter() {
+            if let Some(to_spec) = net_c.s_dir.to() {
+                if let Err(e) = server.send_spec(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()), *to_spec) {
+                    error!("{}", e);
+                }
+            }
+        }
+    } else if let Some(client) = client {
+        for (net_e, net_c, comp) in q.iter() {
+            if let CNetDir::To = net_c.c_dir {
+                if let Err(e) = client.send(&NetCompMsg::<M>::new(net_e.id, comp.clone().into())) {
+                    error!("{}", e);
+                }
+            }
+        }
+    }
+}
+
 fn comp_send<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
-    mut q: Query<(&NetEntity, &NetComp<T, M>, &T, ChangeTrackers<T>)>,
+    q: Query<(&NetEntity, &NetComp<T, M>, &T, ChangeTrackers<T>)>,
 ) where
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
 {
     if let Some(server) = server {
-        for (net_e, net_c, comp, ct) in q.iter_mut() {
+        for (net_e, net_c, comp, ct) in q.iter() {
             // If we are using change detection, and the component hasn't been changed, skip.
             if net_c.cd && !ct.is_changed() { continue; }
 
@@ -197,7 +251,7 @@ fn comp_send<T, M>(
             }
         }
     } else if let Some(client) = client {
-        for (net_e, net_c, comp, ct) in q.iter_mut() {
+        for (net_e, net_c, comp, ct) in q.iter() {
             // If we are using change detection, and the component hasn't been changed, skip.
             if net_c.cd && !ct.is_changed() { continue; }
 
@@ -220,7 +274,7 @@ fn comp_recv<T, M>(
 {
     if let Some(server) = server {
         // Cache messages
-        let msgs: Vec<NetMsg<NetCompMsg<M>>> = server.recv::<NetCompMsg<M>>().unwrap().collect();
+        let msgs: Vec<NetMsg<NetCompMsg<M>>> = server.recv::<NetCompMsg<M>>().collect();
         for (net_e, mut net_c, mut comp) in q.iter_mut() {
             if let Some(&spec) = net_c.s_dir.from() {
                 if let Some(valid_msg) = get_latest_msg(&msgs, net_c.last, spec, net_e.id) {
@@ -237,7 +291,7 @@ fn comp_recv<T, M>(
         }
     } else if let Some(client) = client {
         // Cache messages
-        let msgs: Vec<NetMsg<NetCompMsg<M>>> = client.recv::<NetCompMsg<M>>().unwrap().collect();
+        let msgs: Vec<NetMsg<NetCompMsg<M>>> = client.recv::<NetCompMsg<M>>().collect();
         for (net_e, mut net_c, mut comp) in q.iter_mut() {
             if net_c.c_dir == CNetDir::From {
                 if let Some(valid_msg) = get_latest_msg(&msgs, net_c.last, CIdSpec::All, net_e.id) {

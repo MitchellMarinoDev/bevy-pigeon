@@ -18,6 +18,6 @@ name = "mvp"
 name = "player"
 
 [dependencies]
-carrier-pigeon = { git = "https://github.com/mitchellmarinodev/carrier-pigeon", rev = "efb421705715c96f2bb1e3211dd53ce06c665ed5" }
+carrier-pigeon = { git = "https://github.com/mitchellmarinodev/carrier-pigeon", rev = "18b0df0e70f0cafeb590c1db8c5740d87dd0a4b0" }
 bevy = "~0.7.0"
 serde = { version = "~1.0", features = ["derive"] }

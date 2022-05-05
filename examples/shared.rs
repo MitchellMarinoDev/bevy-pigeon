@@ -1,5 +1,6 @@
 //! Code shared between the examples to reduce duplicated code.
 //! Contains things like messages that can be useful for multiple examples.
+#![allow(unused)]
 
 use serde::{Serialize, Deserialize};
 use carrier_pigeon::{CId, MsgTable};

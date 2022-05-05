@@ -11,8 +11,13 @@
 //! [`examples/` directory](https://github.com/MitchellMarinoDev/carrier-pigeon/blob/main/examples)
 //! on the GitHub repo.
 
+#[warn(
+    missing_debug_implementations,
+    missing_copy_implementations,
+)]
+
 mod app;
 pub mod sync;
 pub mod types;
 
-pub use app::{AppExt, ClientPlugin, ServerPlugin};
+pub use app::*;

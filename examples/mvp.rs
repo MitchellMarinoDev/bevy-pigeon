@@ -30,14 +30,16 @@ fn main() {
 
     // Multiplayer
     let multiplayer_arg = std::env::args().nth(1).unwrap_or("server".into()).to_lowercase();
-    let server = multiplayer_arg == "host" || multiplayer_arg == "server";
-    let client = multiplayer_arg == "host" || multiplayer_arg == "client";
+    let is_server = multiplayer_arg == "server";
+    let is_client = multiplayer_arg == "client";
 
-    if server {
+    println!("Server: {}, Client: {}", is_server, is_client);
+
+    if is_server {
         let server = Server::new(ADDR_LOCAL.parse().unwrap(), parts.clone()).unwrap();
         app.insert_resource(server);
     }
-    if client {
+    if is_client {
         let pending_client = Client::new(ADDR_LOCAL.parse().unwrap(), parts, Connection::default());
         // For simplicity, just block until the connection is made. Realistically you would add the PendingConnection to
         //      The resources and poll it.
@@ -46,7 +48,8 @@ fn main() {
         app.insert_resource(client);
     }
 
-    app.add_plugins(DefaultPlugins)
+    app
+        .add_plugins(DefaultPlugins)
         .add_plugin(ClientPlugin)
         .add_plugin(ServerPlugin)
 
@@ -109,7 +112,7 @@ fn handle_discon_con(
     server: Option<ResMut<Server>>,
 ) {
     if let Some(mut server) = server {
-        server.handle_new_cons(&mut |_cid, _c: Connection| (true, Response::Accepted));
+        server.handle_new_cons(&mut |cid, _c: Connection| (true, Response::Accepted(cid)));
         server.handle_disconnects(&mut |cid, status| {
             info!("Client {cid} disconnected with status: {status}");
         });

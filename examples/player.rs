@@ -478,13 +478,13 @@ mod game {
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
         if let Some(client) = client {
-            for msg in client.recv::<DelPlayer>().unwrap() {
+            for msg in client.recv::<DelPlayer>() {
                 if let Some((entity, _net_e)) = q_player.iter().filter(|(_e, net_e)| net_e.id == msg.0 as u64).next() {
                     commands.entity(entity).despawn_recursive();
                 }
             }
 
-            for msg in client.recv::<NewPlayer>().unwrap() {
+            for msg in client.recv::<NewPlayer>() {
                 spawn_player(msg.0, false, &mut commands, &mut *meshes, &mut *materials);
             }
         }
