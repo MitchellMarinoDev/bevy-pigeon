@@ -93,6 +93,7 @@ fn clean_up<T: Component>(mut commands: Commands, q_menu: Query<Entity, With<T>>
 mod menu {
     use bevy::prelude::*;
     use carrier_pigeon::{Client, MsgTableParts, Server};
+    use carrier_pigeon::net::{CConfig, SConfig};
     use crate::{clean_up, Config, Connection, GameState, SystemSet};
     use crate::connecting::MyCId;
     use crate::GameState::Menu;
@@ -139,18 +140,18 @@ mod menu {
             if *interaction == Interaction::Clicked {
                 match menu_button {
                     MenuButton::Server => {
-                        let server = Server::new(conf.ip, (*parts).clone()).expect("Failed to start a server.");
+                        let server = Server::new(conf.ip, (*parts).clone(), SConfig::default()).expect("Failed to start a server.");
                         commands.insert_resource(server);
                     }
                     MenuButton::Host => {
-                        let server = Server::new(conf.ip, (*parts).clone()).expect("Failed to start a server.");
+                        let server = Server::new(conf.ip, (*parts).clone(), SConfig::default()).expect("Failed to start a server.");
                         commands.insert_resource(server);
-                        let client = Client::new(conf.ip, (*parts).clone(), Connection::new(conf.user.clone(), conf.pass.clone()));
+                        let client = Client::new(conf.ip, (*parts).clone(), CConfig::default(), Connection::new(conf.user.clone(), conf.pass.clone()));
                         commands.insert_resource(client.option());
                         commands.insert_resource(MyCId(1));
                     }
                     MenuButton::Client => {
-                        let client = Client::new(conf.ip, (*parts).clone(), Connection::new(conf.user.clone(), conf.pass.clone()));
+                        let client = Client::new(conf.ip, (*parts).clone(), CConfig::default(), Connection::new(conf.user.clone(), conf.pass.clone()));
                         commands.insert_resource(client.option());
                     }
                 }
@@ -402,6 +403,7 @@ mod game {
     use carrier_pigeon::net::CIdSpec;
     use carrier_pigeon::net::CIdSpec::{Except, Only};
     use bevy_pigeon::sync::{CNetDir, NetComp, NetEntity, SNetDir};
+    use bevy_pigeon::{NetLabel, SyncC};
     use bevy_pigeon::types::NetTransform;
     use crate::{clean_up, Config, Connection, DelPlayer, NewPlayer, RejectReason, Response, SystemSet};
     use crate::connecting::MyCId;
@@ -415,6 +417,9 @@ mod game {
     #[derive(Clone, Debug, Default, Component)]
     struct MyPlayer;
 
+    #[derive(Clone, Debug, Default)]
+    struct SyncTimer(Timer);
+
     /// Maps a connection ID to a username.
     #[derive(Clone, Debug, Default)]
     struct Players(pub HashMap<CId, String>);
@@ -427,6 +432,7 @@ mod game {
     impl Plugin for GamePlugin {
         fn build(&self, app: &mut App) {
             app
+                .insert_resource(SyncTimer(Timer::from_seconds(0.5, true)))
                 .insert_resource(Players::default())
                 .add_system_set(
                     SystemSet::on_enter(Game)
@@ -434,9 +440,10 @@ mod game {
                 )
                 .add_system_set(
                     SystemSet::on_update(Game)
-                        .with_system(handle_cons)
-                        .with_system(add_del_players)
+                        .with_system(handle_cons.after(NetLabel))
+                        .with_system(add_del_players.before(NetLabel))
                         .with_system(move_player)
+                        .with_system(sync)
                 )
                 .add_system_set(
                     SystemSet::on_exit(Game)
@@ -508,6 +515,17 @@ mod game {
             if input.pressed(KeyCode::D) || input.pressed(KeyCode::Right) {
                 transform.translation += Vec3::new(1.0, 0.0, 0.0) * time.delta_seconds();
             }
+        }
+    }
+
+    /// Syncs the transforms every
+    fn sync(
+        time: Res<Time>,
+        mut timer: ResMut<SyncTimer>,
+        mut ew_sync_transform: EventWriter<SyncC<Transform>>,
+    ) {
+        if timer.0.tick(time.delta()).just_finished() {
+            ew_sync_transform.send(SyncC::default());
         }
     }
 

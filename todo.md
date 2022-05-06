@@ -1,5 +1,5 @@
 # TODO:
-- [ ] Resolve // TODO:s
+- [x] Resolve // TODO:s
 - [x] Look for unwraps that may panic.
 - [x] Make examples.
 - [x] Work on Quickstart.md
@@ -11,7 +11,7 @@
 - [x] License. 
 - [x] Label systems.
 - [x] Advanced guide.
-- [ ] To add a way to send a sync message ignoring the change detection likely through an event.
+- [x] To add a way to send a sync message ignoring the change detection likely through an event.
 
 ## For v0.4.0:
 - [ ] Messages that only overwrite some data (requires custom trait).

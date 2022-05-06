@@ -15,8 +15,8 @@ use crate::sync::{NetComp, NetEntity};
 /// This is most useful if you are using the change detection; you may want to force a sync
 /// of components when a new client joins.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug, Default)]
-pub struct SyncC<T, M = T> {
-    _pd: PhantomData<(T, M)>,
+pub struct SyncC<T> {
+    _pd: PhantomData<T>,
 }
 
 /// A label that is applied to all networking systems.
@@ -122,7 +122,7 @@ impl AppExt for App {
     {
         table.register::<NetCompMsg<M>>(transport).unwrap();
 
-        self.add_event::<SyncC<T, M>>();
+        self.add_event::<SyncC<T>>();
         self.add_system(send_on_event::<T, M>.label(NetLabel));
         self.add_system(comp_send::<T, M>.label(NetLabel));
         self.add_system(comp_recv::<T, M>.label(NetLabel));
@@ -143,7 +143,7 @@ impl AppExt for App {
     {
         table.register::<NetCompMsg<M>>(transport)?;
 
-        self.add_event::<SyncC<T, M>>();
+        self.add_event::<SyncC<T>>();
         self.add_system(send_on_event::<T, M>.label(NetLabel));
         self.add_system(comp_send::<T, M>.label(NetLabel));
         self.add_system(comp_recv::<T, M>.label(NetLabel));
@@ -170,7 +170,7 @@ impl AppExt for App {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
 
-        self.add_event::<SyncC<T, M>>();
+        self.add_event::<SyncC<T>>();
         self.add_system(send_on_event::<T, M>.label(NetLabel));
         self.add_system(comp_send::<T, M>.label(NetLabel));
         self.add_system(comp_recv::<T, M>.label(NetLabel));
@@ -192,7 +192,7 @@ impl AppExt for App {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id)?;
 
-        self.add_event::<SyncC<T, M>>();
+        self.add_event::<SyncC<T>>();
         self.add_system(send_on_event::<T, M>.label(NetLabel));
         self.add_system(comp_send::<T, M>.label(NetLabel));
         self.add_system(comp_recv::<T, M>.label(NetLabel));
@@ -201,7 +201,7 @@ impl AppExt for App {
 }
 
 fn send_on_event<T, M>(
-    mut er: EventReader<SyncC<T, M>>,
+    mut er: EventReader<SyncC<T>>,
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
     q: Query<(&NetEntity, &NetComp<T, M>, &T)>,
@@ -210,6 +210,7 @@ fn send_on_event<T, M>(
     M: Clone + Into<T> + Any + Send + Sync,
 {
     if er.iter().count() == 0 { return; }
+    trace!("Force Syncing {}", std::any::type_name::<T>());
 
     // Almost copy-paste from [`comp_send`] ignoring change detection
     if let Some(server) = server {

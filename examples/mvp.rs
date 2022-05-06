@@ -8,6 +8,7 @@ mod shared;
 use std::f32::consts::PI;
 use bevy::prelude::*;
 use carrier_pigeon::{Client, Server, Transport};
+use carrier_pigeon::net::{CConfig, SConfig};
 use bevy_pigeon::{AppExt, ClientPlugin, ServerPlugin};
 use bevy_pigeon::sync::{NetComp, NetEntity};
 use bevy_pigeon::types::NetTransform;
@@ -36,11 +37,11 @@ fn main() {
     println!("Server: {}, Client: {}", is_server, is_client);
 
     if is_server {
-        let server = Server::new(ADDR_LOCAL.parse().unwrap(), parts.clone()).unwrap();
+        let server = Server::new(ADDR_LOCAL.parse().unwrap(), parts.clone(), SConfig::default()).unwrap();
         app.insert_resource(server);
     }
     if is_client {
-        let pending_client = Client::new(ADDR_LOCAL.parse().unwrap(), parts, Connection::default());
+        let pending_client = Client::new(ADDR_LOCAL.parse().unwrap(), parts, CConfig::default(), Connection::default());
         // For simplicity, just block until the connection is made. Realistically you would add the PendingConnection to
         //      The resources and poll it.
         let (client, response): (Client, Response) = pending_client.block().unwrap();
