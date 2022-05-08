@@ -10,7 +10,7 @@ use bevy::prelude::*;
 use bevy_pigeon::sync::{NetComp, NetEntity};
 use bevy_pigeon::types::NetTransform;
 use bevy_pigeon::{AppExt, ClientPlugin, ServerPlugin};
-use carrier_pigeon::net::{CConfig, SConfig};
+use carrier_pigeon::net::Config;
 use carrier_pigeon::{Client, Server, Transport};
 use std::f32::consts::PI;
 
@@ -42,7 +42,7 @@ fn main() {
         let server = Server::new(
             ADDR_LOCAL.parse().unwrap(),
             parts.clone(),
-            SConfig::default(),
+            Config::default(),
         )
         .unwrap();
         app.insert_resource(server);
@@ -51,7 +51,7 @@ fn main() {
         let pending_client = Client::new(
             ADDR_LOCAL.parse().unwrap(),
             parts,
-            CConfig::default(),
+            Config::default(),
             Connection::default(),
         );
         // For simplicity, just block until the connection is made. Realistically you would add the PendingConnection to

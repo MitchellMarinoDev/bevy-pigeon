@@ -20,7 +20,7 @@ mod shared;
 const ADDR_LOCAL: &str = "127.0.0.1:7777";
 
 #[derive(Clone, Eq, PartialEq, Debug)]
-struct Config {
+struct MyConfig {
     ip: SocketAddr,
     user: String,
     pass: String,
@@ -54,7 +54,7 @@ fn main() {
         .expect("please enter a valid ip address and port. Ex. `192.168.0.99:4455`");
     let user = std::env::args().nth(2).unwrap_or("Player".into());
     let pass = std::env::args().nth(3).unwrap_or(String::new());
-    let conf = Config { ip, user, pass };
+    let conf = MyConfig { ip, user, pass };
     app.insert_resource(conf);
 
     // Tell bevy-pigeon to sync the Transform component using the NetTransform message type.
@@ -95,9 +95,9 @@ fn clean_up<T: Component>(mut commands: Commands, q_menu: Query<Entity, With<T>>
 mod menu {
     use crate::connecting::MyCId;
     use crate::GameState::Menu;
-    use crate::{clean_up, Config, Connection, GameState, SystemSet};
+    use crate::{clean_up, Connection, GameState, MyConfig, SystemSet};
     use bevy::prelude::*;
-    use carrier_pigeon::net::{CConfig, SConfig};
+    use carrier_pigeon::net::Config;
     use carrier_pigeon::{Client, MsgTableParts, Server};
 
     /// A marker component so that we can clean up easily.
@@ -121,7 +121,7 @@ mod menu {
     }
 
     fn handle_buttons(
-        conf: Res<Config>,
+        conf: Res<MyConfig>,
         parts: Res<MsgTableParts>,
         q_button: Query<(&Interaction, &MenuButton), Changed<Interaction>>,
         mut game_state: ResMut<State<GameState>>,
@@ -131,18 +131,18 @@ mod menu {
             if *interaction == Interaction::Clicked {
                 match menu_button {
                     MenuButton::Server => {
-                        let server = Server::new(conf.ip, (*parts).clone(), SConfig::default())
+                        let server = Server::new(conf.ip, (*parts).clone(), Config::default())
                             .expect("Failed to start a server.");
                         commands.insert_resource(server);
                     }
                     MenuButton::Host => {
-                        let server = Server::new(conf.ip, (*parts).clone(), SConfig::default())
+                        let server = Server::new(conf.ip, (*parts).clone(), Config::default())
                             .expect("Failed to start a server.");
                         commands.insert_resource(server);
                         let client = Client::new(
                             conf.ip,
                             (*parts).clone(),
-                            CConfig::default(),
+                            Config::default(),
                             Connection::new(conf.user.clone(), conf.pass.clone()),
                         );
                         commands.insert_resource(client.option());
@@ -152,7 +152,7 @@ mod menu {
                         let client = Client::new(
                             conf.ip,
                             (*parts).clone(),
-                            CConfig::default(),
+                            Config::default(),
                             Connection::new(conf.user.clone(), conf.pass.clone()),
                         );
                         commands.insert_resource(client.option());
@@ -384,7 +384,7 @@ mod game {
     use crate::connecting::MyCId;
     use crate::GameState::Game;
     use crate::{
-        clean_up, Config, Connection, DelPlayer, NewPlayer, RejectReason, Response, SystemSet,
+        clean_up, MyConfig, Connection, DelPlayer, NewPlayer, RejectReason, Response, SystemSet,
     };
     use bevy::prelude::*;
     use bevy::utils::HashMap;
@@ -513,7 +513,7 @@ mod game {
 
     fn handle_cons(
         my_cid: Option<Res<MyCId>>,
-        conf: Res<Config>,
+        conf: Res<MyConfig>,
         mut players: ResMut<Players>,
         server: Option<ResMut<Server>>,
         // For spawning player
@@ -547,11 +547,11 @@ mod game {
             for (cid, user) in new_players {
                 // Tell the new client about all the existing clients.
                 for p_cid in players.0.keys() {
-                    server.send_to(&NewPlayer(*p_cid), cid).unwrap();
+                    server.send_to(cid, &NewPlayer(*p_cid)).unwrap();
                 }
                 // Tell the other players about the new player.
                 server
-                    .send_spec(&NewPlayer(cid), CIdSpec::Except(cid))
+                    .send_spec(CIdSpec::Except(cid), &NewPlayer(cid))
                     .unwrap();
 
                 players.0.insert(cid, user);

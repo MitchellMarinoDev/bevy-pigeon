@@ -221,8 +221,8 @@ fn send_on_event<T, M>(
         for (net_e, net_c, comp) in q.iter() {
             if let Some(to_spec) = net_c.s_dir.to() {
                 if let Err(e) = server.send_spec(
-                    &NetCompMsg::<M>::new(net_e.id, comp.clone().into()),
                     *to_spec,
+                    &NetCompMsg::<M>::new(net_e.id, comp.clone().into()),
                 ) {
                     error!("{}", e);
                 }
@@ -257,8 +257,8 @@ fn comp_send<T, M>(
 
             if let Some(to_spec) = net_c.s_dir.to() {
                 if let Err(e) = server.send_spec(
-                    &NetCompMsg::<M>::new(net_e.id, comp.clone().into()),
                     *to_spec,
+                    &NetCompMsg::<M>::new(net_e.id, comp.clone().into()),
                 ) {
                     error!("{}", e);
                 }
