@@ -2,15 +2,14 @@
 //! Contains things like messages that can be useful for multiple examples.
 #![allow(unused)]
 
-use serde::{Serialize, Deserialize};
 use carrier_pigeon::{CId, MsgTable};
+use serde::{Deserialize, Serialize};
 
 pub fn get_table() -> MsgTable {
     let table = MsgTable::new();
 
     table
 }
-
 
 /// The connection message.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]

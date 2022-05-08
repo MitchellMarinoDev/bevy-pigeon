@@ -11,13 +11,13 @@
 //!  - [AlphaMode]
 //!  - [EulerRot]
 //!
-//! If you think other network-able types would be helpful to many users,
-//! and think it should be included here, please send a PR.
+//! If you think other network-able types would be helpful to many users, and think it should be
+//! included here, please send a PR.
 
 mod light;
 mod misc;
 mod transform;
 
-pub use transform::*;
 pub use light::*;
 pub use misc::*;
+pub use transform::*;

@@ -1,19 +1,20 @@
-//! The app extension.
+//! Contains the plugins, systems, and components for the bevy app.
+
 use crate::sync::{CNetDir, NetCompMsg, SNetDir};
+use crate::sync::{NetComp, NetEntity};
 use bevy::prelude::*;
+use carrier_pigeon::net::{CIdSpec, NetMsg};
 use carrier_pigeon::{Client, MsgRegError, MsgTable, Server, SortedMsgTable, Transport};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::any::Any;
 use std::marker::PhantomData;
-use carrier_pigeon::net::{CIdSpec, NetMsg};
-use crate::sync::{NetComp, NetEntity};
 
 /// An event that forces a sync of component `T`.
 ///
-/// This can be used if you need to force a sync of component `T` with message type `M`.
-/// This is most useful if you are using the change detection; you may want to force a sync
-/// of components when a new client joins.
+/// This can be used if you need to force a sync of component `T` with message type `M`. This is
+/// most useful if you are using the change detection; you may want to force a sync of components
+/// when a new client joins.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug, Default)]
 pub struct SyncC<T> {
     _pd: PhantomData<T>,
@@ -25,15 +26,15 @@ pub struct NetLabel;
 
 /// The client plugin.
 ///
-/// Automatically clears client's message buffer and receive new messages at the start of
-/// every frame.
+/// Automatically clears client's message buffer and receive new messages at the start of every
+/// frame.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Default, Hash)]
 pub struct ClientPlugin;
 
 /// The server plugin.
 ///
-/// Automatically clears server's message buffer and receive new messages at the start of
-/// every frame.
+/// Automatically clears server's message buffer and receive new messages at the start of every
+/// frame.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Default, Hash)]
 pub struct ServerPlugin;
 
@@ -65,14 +66,9 @@ fn server_tick(server: Option<ResMut<Server>>) {
     }
 }
 
-
 /// An extension trait for easy registering [`NetComp`] types.
 pub trait AppExt {
-    fn sync_comp<T, M>(
-        &mut self,
-        table: &mut MsgTable,
-        transport: Transport
-    ) -> &mut Self
+    fn sync_comp<T, M>(&mut self, table: &mut MsgTable, transport: Transport) -> &mut Self
     where
         T: Clone + Into<M> + Component,
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
@@ -87,34 +83,36 @@ pub trait AppExt {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
 
     fn sync_comp_sorted<T, M>(
-        &mut self, table: &mut SortedMsgTable, transport: Transport) -> &mut Self
-        where
-            T: Clone + Into<M> + Component,
-            M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
+        &mut self,
+        table: &mut SortedMsgTable,
+        transport: Transport,
+    ) -> &mut Self
+    where
+        T: Clone + Into<M> + Component,
+        M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
 
     fn try_sync_comp_sorted<T, M>(
         &mut self,
         table: &mut SortedMsgTable,
         transport: Transport,
     ) -> Result<&mut Self, MsgRegError>
-        where
-            T: Clone + Into<M> + Component,
-            M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
+    where
+        T: Clone + Into<M> + Component,
+        M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
 }
 
 impl AppExt for App {
     /// Adds everything needed to sync component `T` using message type `M`.
     ///
-    /// Registers the type `NetCompMsg<M>` into `table` and adds the
-    /// system required to sync components of type `T`, using type `M`
-    /// to send.
+    /// Registers the type `NetCompMsg<M>` into `table` and adds the system required to sync
+    /// components of type `T`, using type `M` to send.
     ///
-    /// Types `T` and `M` ***can*** be the same type; if the component `T`
-    /// implements all the required traits, you may use it as `M`.
+    /// Types `T` and `M` ***can*** be the same type; if the component `T` implements all the
+    /// required traits, you may use it as `M`.
     ///
     /// ### Panics
-    /// panics if `NetCompMsg<M>` is already registered in the table (If you
-    /// call this method twice with the same `M`).
+    /// panics if `NetCompMsg<M>` is already registered in the table
+    /// (If you call this method twice with the same `M`).
     fn sync_comp<T, M>(&mut self, table: &mut MsgTable, transport: Transport) -> &mut Self
     where
         T: Clone + Into<M> + Component,
@@ -152,20 +150,23 @@ impl AppExt for App {
 
     /// Adds everything needed to sync component `T` using message type `M`.
     ///
-    /// Registers the type `NetCompMsg<M>` into `table` and adds the
-    /// system required to sync components of type `T`, using type `M`
-    /// to send.
+    /// Registers the type `NetCompMsg<M>` into `table` and adds the system required to sync
+    /// components of type `T`, using type `M` to send.
     ///
-    /// Types `T` and `M` ***can*** be the same type; if the component `T`
-    /// implements all the required traits, you may use it as `M`.
+    /// Types `T` and `M` ***can*** be the same type; if the component `T` implements all the
+    /// required traits, you may use it as `M`.
     ///
     /// ### Panics
-    /// panics if `NetCompMsg<M>` is already registered in the table (If you
-    /// call this method twice with the same `M`).
-    fn sync_comp_sorted<T, M>(&mut self, table: &mut SortedMsgTable, transport: Transport) -> &mut Self
-        where
-            T: Clone + Into<M> + Component,
-            M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
+    /// panics if `NetCompMsg<M>` is already registered in the table
+    /// (If you call this method twice with the same `M`).
+    fn sync_comp_sorted<T, M>(
+        &mut self,
+        table: &mut SortedMsgTable,
+        transport: Transport,
+    ) -> &mut Self
+    where
+        T: Clone + Into<M> + Component,
+        M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
@@ -185,9 +186,9 @@ impl AppExt for App {
         table: &mut SortedMsgTable,
         transport: Transport,
     ) -> Result<&mut Self, MsgRegError>
-        where
-            T: Clone + Into<M> + Component,
-            M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
+    where
+        T: Clone + Into<M> + Component,
+        M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id)?;
@@ -200,6 +201,7 @@ impl AppExt for App {
     }
 }
 
+/// A system that forces a sync of a certain component.
 fn send_on_event<T, M>(
     mut er: EventReader<SyncC<T>>,
     server: Option<ResMut<Server>>,
@@ -209,14 +211,19 @@ fn send_on_event<T, M>(
     T: Clone + Into<M> + Component,
     M: Clone + Into<T> + Any + Send + Sync,
 {
-    if er.iter().count() == 0 { return; }
+    if er.iter().count() == 0 {
+        return;
+    }
     trace!("Force Syncing {}", std::any::type_name::<T>());
 
     // Almost copy-paste from [`comp_send`] ignoring change detection
     if let Some(server) = server {
         for (net_e, net_c, comp) in q.iter() {
             if let Some(to_spec) = net_c.s_dir.to() {
-                if let Err(e) = server.send_spec(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()), *to_spec) {
+                if let Err(e) = server.send_spec(
+                    &NetCompMsg::<M>::new(net_e.id, comp.clone().into()),
+                    *to_spec,
+                ) {
                     error!("{}", e);
                 }
             }
@@ -232,6 +239,7 @@ fn send_on_event<T, M>(
     }
 }
 
+/// A system that syncs the component `T`.
 fn comp_send<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
@@ -243,10 +251,15 @@ fn comp_send<T, M>(
     if let Some(server) = server {
         for (net_e, net_c, comp, ct) in q.iter() {
             // If we are using change detection, and the component hasn't been changed, skip.
-            if net_c.cd && !ct.is_changed() { continue; }
+            if net_c.cd && !ct.is_changed() {
+                continue;
+            }
 
             if let Some(to_spec) = net_c.s_dir.to() {
-                if let Err(e) = server.send_spec(&NetCompMsg::<M>::new(net_e.id, comp.clone().into()), *to_spec) {
+                if let Err(e) = server.send_spec(
+                    &NetCompMsg::<M>::new(net_e.id, comp.clone().into()),
+                    *to_spec,
+                ) {
                     error!("{}", e);
                 }
             }
@@ -254,7 +267,9 @@ fn comp_send<T, M>(
     } else if let Some(client) = client {
         for (net_e, net_c, comp, ct) in q.iter() {
             // If we are using change detection, and the component hasn't been changed, skip.
-            if net_c.cd && !ct.is_changed() { continue; }
+            if net_c.cd && !ct.is_changed() {
+                continue;
+            }
 
             if let CNetDir::To = net_c.c_dir {
                 if let Err(e) = client.send(&NetCompMsg::<M>::new(net_e.id, comp.clone().into())) {
@@ -265,6 +280,7 @@ fn comp_send<T, M>(
     }
 }
 
+/// A system that receives messages of type `M` and applies it to component `T`.
 fn comp_recv<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
@@ -300,7 +316,6 @@ fn comp_recv<T, M>(
                     *comp = valid_msg.msg.clone().into();
                 }
 
-
                 if let Some(valid_msg) = msgs.iter().filter(|msg| msg.id == net_e.id).last() {
                     *comp = valid_msg.msg.clone().into();
                 }
@@ -309,9 +324,14 @@ fn comp_recv<T, M>(
     }
 }
 
-/// Gets the most recent message that matches `from_spec` for entity with `id`
+/// Helper function that gets the most recent message that matches `from_spec` for entity with `id`
 /// if it is sent later that current.
-fn get_latest_msg<'a, M: Any + Send + Sync>(msgs: &'a Vec<NetMsg<NetCompMsg<M>>>, current: Option<u32>, spec: CIdSpec, id: u64) -> Option<&'a NetMsg<'a, NetCompMsg<M>>> {
+fn get_latest_msg<'a, M: Any + Send + Sync>(
+    msgs: &'a Vec<NetMsg<NetCompMsg<M>>>,
+    current: Option<u32>,
+    spec: CIdSpec,
+    id: u64,
+) -> Option<&'a NetMsg<'a, NetCompMsg<M>>> {
     let mut latest_time = current.unwrap_or(0);
     let mut latest = None;
     for m in msgs.iter().filter(|m| spec.matches(m.cid) && m.id == id) {

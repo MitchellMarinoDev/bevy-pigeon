@@ -4,16 +4,16 @@
 //! This is more in depth than the `mvp` example. It shows connection validation,
 //! and doing something on a disconnect.
 
-use std::net::SocketAddr;
-use bevy::prelude::*;
-use carrier_pigeon::{CId, Transport};
-use bevy_pigeon::{AppExt, ClientPlugin, ServerPlugin};
-use bevy_pigeon::types::NetTransform;
 use crate::connecting::ConnectingPlugin;
 use crate::game::GamePlugin;
 use crate::menu::MenuPlugin;
 use crate::shared::*;
-use serde::{Serialize, Deserialize};
+use bevy::prelude::*;
+use bevy_pigeon::types::NetTransform;
+use bevy_pigeon::{AppExt, ClientPlugin, ServerPlugin};
+use carrier_pigeon::{CId, Transport};
+use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 
 mod shared;
 
@@ -47,7 +47,11 @@ fn main() {
     table.register::<DelPlayer>(Transport::TCP).unwrap();
 
     // Get IP addr
-    let ip: SocketAddr = std::env::args().nth(1).unwrap_or(ADDR_LOCAL.into()).parse().expect("please enter a valid ip address and port. Ex. `192.168.0.99:4455`");
+    let ip: SocketAddr = std::env::args()
+        .nth(1)
+        .unwrap_or(ADDR_LOCAL.into())
+        .parse()
+        .expect("please enter a valid ip address and port. Ex. `192.168.0.99:4455`");
     let user = std::env::args().nth(2).unwrap_or("Player".into());
     let pass = std::env::args().nth(3).unwrap_or(String::new());
     let conf = Config { ip, user, pass };
@@ -59,12 +63,10 @@ fn main() {
     let parts = table.build::<Connection, Response, Disconnect>().unwrap();
     app.insert_resource(parts);
 
-    app
-        .add_state(GameState::Menu)
+    app.add_state(GameState::Menu)
         .add_plugins(DefaultPlugins)
         .add_plugin(ClientPlugin)
         .add_plugin(ServerPlugin)
-
         .add_startup_system(setup)
         .add_plugin(MenuPlugin)
         .add_plugin(ConnectingPlugin)
@@ -91,12 +93,12 @@ fn clean_up<T: Component>(mut commands: Commands, q_menu: Query<Entity, With<T>>
 }
 
 mod menu {
-    use bevy::prelude::*;
-    use carrier_pigeon::{Client, MsgTableParts, Server};
-    use carrier_pigeon::net::{CConfig, SConfig};
-    use crate::{clean_up, Config, Connection, GameState, SystemSet};
     use crate::connecting::MyCId;
     use crate::GameState::Menu;
+    use crate::{clean_up, Config, Connection, GameState, SystemSet};
+    use bevy::prelude::*;
+    use carrier_pigeon::net::{CConfig, SConfig};
+    use carrier_pigeon::{Client, MsgTableParts, Server};
 
     /// A marker component so that we can clean up easily.
     #[derive(Copy, Clone, Eq, PartialEq, Debug, Hash, Component)]
@@ -112,20 +114,9 @@ mod menu {
     pub struct MenuPlugin;
     impl Plugin for MenuPlugin {
         fn build(&self, app: &mut App) {
-            app
-                .add_system_set(
-                    SystemSet::on_enter(Menu)
-                        .with_system(setup_menu)
-                )
-                .add_system_set(
-                    SystemSet::on_update(Menu)
-                        .with_system(handle_buttons)
-                )
-                .add_system_set(
-                    SystemSet::on_exit(Menu)
-                        .with_system(clean_up::<MenuItem>)
-                )
-            ;
+            app.add_system_set(SystemSet::on_enter(Menu).with_system(setup_menu))
+                .add_system_set(SystemSet::on_update(Menu).with_system(handle_buttons))
+                .add_system_set(SystemSet::on_exit(Menu).with_system(clean_up::<MenuItem>));
         }
     }
 
@@ -140,18 +131,30 @@ mod menu {
             if *interaction == Interaction::Clicked {
                 match menu_button {
                     MenuButton::Server => {
-                        let server = Server::new(conf.ip, (*parts).clone(), SConfig::default()).expect("Failed to start a server.");
+                        let server = Server::new(conf.ip, (*parts).clone(), SConfig::default())
+                            .expect("Failed to start a server.");
                         commands.insert_resource(server);
                     }
                     MenuButton::Host => {
-                        let server = Server::new(conf.ip, (*parts).clone(), SConfig::default()).expect("Failed to start a server.");
+                        let server = Server::new(conf.ip, (*parts).clone(), SConfig::default())
+                            .expect("Failed to start a server.");
                         commands.insert_resource(server);
-                        let client = Client::new(conf.ip, (*parts).clone(), CConfig::default(), Connection::new(conf.user.clone(), conf.pass.clone()));
+                        let client = Client::new(
+                            conf.ip,
+                            (*parts).clone(),
+                            CConfig::default(),
+                            Connection::new(conf.user.clone(), conf.pass.clone()),
+                        );
                         commands.insert_resource(client.option());
                         commands.insert_resource(MyCId(1));
                     }
                     MenuButton::Client => {
-                        let client = Client::new(conf.ip, (*parts).clone(), CConfig::default(), Connection::new(conf.user.clone(), conf.pass.clone()));
+                        let client = Client::new(
+                            conf.ip,
+                            (*parts).clone(),
+                            CConfig::default(),
+                            Connection::new(conf.user.clone(), conf.pass.clone()),
+                        );
                         commands.insert_resource(client.option());
                     }
                 }
@@ -160,10 +163,7 @@ mod menu {
         }
     }
 
-    fn setup_menu(
-        mut commands: Commands,
-        assets: Res<AssetServer>,
-    ) {
+    fn setup_menu(mut commands: Commands, assets: Res<AssetServer>) {
         println!("Setting up");
         let font = assets.load("FiraMono-Medium.ttf");
         let text_style = TextStyle {
@@ -215,7 +215,7 @@ mod menu {
                             font_size: 100.0,
                             ..text_style.clone()
                         },
-                        TextAlignment::default()
+                        TextAlignment::default(),
                     ),
                     ..default()
                 });
@@ -281,10 +281,10 @@ mod menu {
 }
 
 mod connecting {
+    use crate::GameState::Connecting;
+    use crate::{clean_up, GameState, Response};
     use bevy::prelude::*;
     use carrier_pigeon::{CId, OptionPendingClient, Server};
-    use crate::{clean_up, GameState, Response};
-    use crate::GameState::Connecting;
 
     #[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
     pub struct MyCId(pub CId);
@@ -296,20 +296,11 @@ mod connecting {
     pub struct ConnectingPlugin;
     impl Plugin for ConnectingPlugin {
         fn build(&self, app: &mut App) {
-            app
+            app.add_system_set(SystemSet::on_enter(Connecting).with_system(setup))
+                .add_system_set(SystemSet::on_update(Connecting).with_system(check_connecting))
                 .add_system_set(
-                    SystemSet::on_enter(Connecting)
-                        .with_system(setup)
-                )
-                .add_system_set(
-                    SystemSet::on_update(Connecting)
-                        .with_system(check_connecting)
-                )
-                .add_system_set(
-                    SystemSet::on_exit(Connecting)
-                        .with_system(clean_up::<ConnectingItem>)
-                )
-            ;
+                    SystemSet::on_exit(Connecting).with_system(clean_up::<ConnectingItem>),
+                );
         }
     }
 
@@ -317,7 +308,7 @@ mod connecting {
         mut commands: Commands,
         server: Option<Res<Server>>,
         client: Option<ResMut<OptionPendingClient>>,
-        mut game_state: ResMut<State<GameState>>
+        mut game_state: ResMut<State<GameState>>,
     ) {
         if server.is_some() {
             // If we have a server, no need to connect.
@@ -346,10 +337,7 @@ mod connecting {
         }
     }
 
-    fn setup(
-        mut commands: Commands,
-        assets: Res<AssetServer>,
-    ) {
+    fn setup(mut commands: Commands, assets: Res<AssetServer>) {
         let font = assets.load("FiraMono-Medium.ttf");
         let text_style = TextStyle {
             font,
@@ -385,11 +373,7 @@ mod connecting {
                         },
                         ..default()
                     },
-                    text: Text::with_section(
-                        "Connecting...",
-                        text_style,
-                        TextAlignment::default()
-                    ),
+                    text: Text::with_section("Connecting...", text_style, TextAlignment::default()),
                     ..default()
                 });
             });
@@ -397,17 +381,19 @@ mod connecting {
 }
 
 mod game {
-    use bevy::prelude::*;
-    use bevy::utils::HashMap;
-    use carrier_pigeon::{CId, Client, Server};
-    use carrier_pigeon::net::CIdSpec;
-    use carrier_pigeon::net::CIdSpec::{Except, Only};
-    use bevy_pigeon::sync::{CNetDir, NetComp, NetEntity, SNetDir};
-    use bevy_pigeon::{NetLabel, SyncC};
-    use bevy_pigeon::types::NetTransform;
-    use crate::{clean_up, Config, Connection, DelPlayer, NewPlayer, RejectReason, Response, SystemSet};
     use crate::connecting::MyCId;
     use crate::GameState::Game;
+    use crate::{
+        clean_up, Config, Connection, DelPlayer, NewPlayer, RejectReason, Response, SystemSet,
+    };
+    use bevy::prelude::*;
+    use bevy::utils::HashMap;
+    use bevy_pigeon::sync::{CNetDir, NetComp, NetEntity, SNetDir};
+    use bevy_pigeon::types::NetTransform;
+    use bevy_pigeon::{NetLabel, SyncC};
+    use carrier_pigeon::net::CIdSpec;
+    use carrier_pigeon::net::CIdSpec::{Except, Only};
+    use carrier_pigeon::{CId, Client, Server};
 
     /// A marker component for a player.
     #[derive(Clone, Debug, Default, Component)]
@@ -431,25 +417,17 @@ mod game {
     pub struct GamePlugin;
     impl Plugin for GamePlugin {
         fn build(&self, app: &mut App) {
-            app
-                .insert_resource(SyncTimer(Timer::from_seconds(0.5, true)))
+            app.insert_resource(SyncTimer(Timer::from_seconds(0.5, true)))
                 .insert_resource(Players::default())
-                .add_system_set(
-                    SystemSet::on_enter(Game)
-                        .with_system(setup_game)
-                )
+                .add_system_set(SystemSet::on_enter(Game).with_system(setup_game))
                 .add_system_set(
                     SystemSet::on_update(Game)
                         .with_system(handle_cons.after(NetLabel))
                         .with_system(add_del_players.before(NetLabel))
                         .with_system(move_player)
-                        .with_system(sync)
+                        .with_system(sync),
                 )
-                .add_system_set(
-                    SystemSet::on_exit(Game)
-                        .with_system(clean_up::<GameItem>)
-                )
-            ;
+                .add_system_set(SystemSet::on_exit(Game).with_system(clean_up::<GameItem>));
         }
     }
 
@@ -486,7 +464,11 @@ mod game {
     ) {
         if let Some(client) = client {
             for msg in client.recv::<DelPlayer>() {
-                if let Some((entity, _net_e)) = q_player.iter().filter(|(_e, net_e)| net_e.id == msg.0 as u64).next() {
+                if let Some((entity, _net_e)) = q_player
+                    .iter()
+                    .filter(|(_e, net_e)| net_e.id == msg.0 as u64)
+                    .next()
+                {
                     commands.entity(entity).despawn_recursive();
                 }
             }
@@ -518,7 +500,7 @@ mod game {
         }
     }
 
-    /// Syncs the transforms every
+    /// Syncs the transforms every 0.5 seconds
     fn sync(
         time: Res<Time>,
         mut timer: ResMut<SyncTimer>,
@@ -568,7 +550,9 @@ mod game {
                     server.send_to(&NewPlayer(*p_cid), cid).unwrap();
                 }
                 // Tell the other players about the new player.
-                server.send_spec(&NewPlayer(cid), CIdSpec::Except(cid)).unwrap();
+                server
+                    .send_spec(&NewPlayer(cid), CIdSpec::Except(cid))
+                    .unwrap();
 
                 players.0.insert(cid, user);
 
@@ -590,13 +574,20 @@ mod game {
         info!("Spawning player. CId: {cid}, mine? {my_player}.");
 
         let net_comp = if my_player {
-            NetComp::<Transform, NetTransform>::new(CNetDir::To, SNetDir::ToFrom(Except(cid), Only(cid)))
+            NetComp::<Transform, NetTransform>::new(
+                true,
+                CNetDir::To,
+                SNetDir::ToFrom(Except(cid), Only(cid)),
+            )
         } else {
-            NetComp::<Transform, NetTransform>::new(CNetDir::From, SNetDir::ToFrom(Except(cid), Only(cid)))
+            NetComp::<Transform, NetTransform>::new(
+                true,
+                CNetDir::From,
+                SNetDir::ToFrom(Except(cid), Only(cid)),
+            )
         };
 
-        let id =
-        commands
+        let id = commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                 material: materials.add(StandardMaterial {
@@ -615,6 +606,5 @@ mod game {
         if my_player {
             commands.entity(id).insert(MyPlayer);
         }
-
     }
 }

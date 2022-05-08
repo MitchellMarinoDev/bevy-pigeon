@@ -1,12 +1,12 @@
 //! The things needed to sync components.
+
 use bevy::prelude::Component;
 use carrier_pigeon::net::CIdSpec;
+use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::marker::PhantomData;
-use serde::{Serialize, Deserialize};
 
-/// A component that tells `bevy-pigeon` to sync the component `T`
-/// which is sent as `M`.
+/// A component that tells `bevy-pigeon` to sync the component `T` which is sent as `M`.
 #[derive(Component, Copy, Clone, Eq, PartialEq, Debug, Hash)]
 pub struct NetComp<T, M = T>
 where
@@ -15,8 +15,8 @@ where
 {
     /// Change detection.
     ///
-    /// If enabled, this only sends a message if the component changed.
-    /// This uses bevy's change detection, which may detect false positives.
+    /// If enabled, this only sends a message if the component changed. This uses bevy's change
+    /// detection, which may detect false positives.
     pub cd: bool,
     /// The timestamp of the last message received and written to this component.
     pub last: Option<u32>,
@@ -50,20 +50,14 @@ where
 {
     /// Creates a new [`NetComp`] with the given net directions.
     /// Change detection (cd) defaults to true.
-    pub fn new(c_dir: CNetDir, s_dir: SNetDir) -> Self {
+    pub fn new(cd: bool, c_dir: CNetDir, s_dir: SNetDir) -> Self {
         NetComp {
-            cd: true,
+            cd,
             last: None,
             c_dir,
             s_dir,
             _pd: PhantomData,
         }
-    }
-
-    /// Turns off change detection.
-    pub fn no_cd(mut self) -> Self {
-        self.cd = false;
-        self
     }
 }
 

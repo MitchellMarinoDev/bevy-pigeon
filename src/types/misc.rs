@@ -1,17 +1,16 @@
 #![allow(deprecated)]
 
 //! Types in this file:
-//! - [Transform]
 //! - [OrthographicProjection]
 //! - [Name]
 //! - [Visibility]
 //! - [AlphaMode]
 //! - [EulerRot]
 
-use serde::{Serialize, Deserialize};
-use bevy::reflect::FromReflect;
 use bevy::prelude::*;
+use bevy::reflect::FromReflect;
 use bevy::render::camera::{DepthCalculation, ScalingMode, WindowOrigin};
+use serde::{Deserialize, Serialize};
 
 /// The network-able version of [OrthographicProjection].
 #[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
@@ -73,7 +72,7 @@ pub struct NetName {
 impl From<Name> for NetName {
     fn from(o: Name) -> Self {
         NetName {
-            name: o.as_str().into()
+            name: o.as_str().into(),
         }
     }
 }

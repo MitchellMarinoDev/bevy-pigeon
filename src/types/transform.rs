@@ -1,9 +1,17 @@
 //! Multiple network-able types for transforms, all containing different combinations of fields.
+//!
+//! Types in this file:
+//! - [NetTransform]
+//! - [NetTransformTR]
+//! - [NetTransformT]
+//! - [NetTransform2d]
+//! - [NetTransform2dTR]
+//! - [NetTransform2dT]
 
-use serde::{Serialize, Deserialize};
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy::reflect::FromReflect;
+use serde::{Deserialize, Serialize};
 
 /// The network-able version of [Transform].
 ///
@@ -87,7 +95,6 @@ impl From<NetTransformTR> for Transform {
         }
     }
 }
-
 
 /// The network-able version of [Transform].
 ///
@@ -248,4 +255,3 @@ impl From<NetTransform2dT> for Transform {
         }
     }
 }
-

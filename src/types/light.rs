@@ -3,10 +3,10 @@
 //!  - [DirectionalLight]
 //!  - [PointLight]
 
-use serde::{Serialize, Deserialize};
-use bevy::reflect::FromReflect;
-use bevy::prelude::*;
 use crate::types::misc::NetOrthographicProjection;
+use bevy::prelude::*;
+use bevy::reflect::FromReflect;
+use serde::{Deserialize, Serialize};
 
 /// The network-able version of [AmbientLight].
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
