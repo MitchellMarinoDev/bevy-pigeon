@@ -51,7 +51,7 @@ impl Plugin for ServerPlugin {
 }
 
 /// Clears client's message buffer and receive new messages.
-fn client_tick(client: Option<ResMut<Client>>) {
+pub fn client_tick(client: Option<ResMut<Client>>) {
     if let Some(mut client) = client {
         client.clear_msgs();
         client.recv_msgs();
@@ -59,7 +59,7 @@ fn client_tick(client: Option<ResMut<Client>>) {
 }
 
 /// Clears server's message buffer and receive new messages.
-fn server_tick(server: Option<ResMut<Server>>) {
+pub fn server_tick(server: Option<ResMut<Server>>) {
     if let Some(mut server) = server {
         server.clear_msgs();
         server.recv_msgs();

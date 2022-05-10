@@ -2,20 +2,22 @@
 
 This will walk you through what you need to know to use `bevy-pigeon`.
 
-This guide assumes some familiarity with `carrier-pigeon`. Reading `carrier-pigeon`'s quickstart
-should do it.
+This guide assumes some familiarity with `carrier-pigeon`. Reading `carrier-pigeon`'s quickstart should do it.
 
 ## Client or Server
 
 `bevy-pigeon` systems operate on `carrier-pigeon`s Client and Server as resources. You will need to create a client,
-server, or both and add them to the app's resources in order for `bevy-pigeon`s systems to work.
-To do this, see `carrier-pigeon`s documentation.
+server, or both and add them to the app's resources in order for `bevy-pigeon`s systems to work.  To do this, see
+`carrier-pigeon`s documentation.
 
 ## Plugin
 
-You must add the plugin to the app. Add the `ClientPlugin`, `ServerPlugin` or both. These plugins will
-automatically clear the message buffer and receive new messages at the start of every frame. If you really want
-to do your own message clearing and receiving, just don't add these plugins.
+You must add the plugin to the app. Add the `ClientPlugin`, `ServerPlugin` or both. These plugins will automatically 
+clear the message buffer and receive new messages at the start of every frame. 
+
+If you want more control about when to clear messages and receive new messages, don't add the plugins. Instead, you can
+add the `bevy_pigeon::app::server_tick` and `bevy_pigeon::app::client_tick` systems where ever you want. Or, you could
+make your own systems entirely.
 
 ## NetEntity
 
@@ -52,9 +54,9 @@ Lastly we need to tell `bevy-pigeon` to add the system that syncs the transforms
 This will add as system to send and receive these components, and register the `Transform` type to be sent 
 through `carrier-pigeon`.
 
-However, `Transform` doesn't implement serde's `Serialize + DeserializeOwned`, so carrier-pigeon can't
-send it. Luckily `bevy-pigeon` provides a network-able `Transform` (along with other common components)
-in the `types` module. Put together this looks like:
+However, `Transform` doesn't implement serde's `Serialize + DeserializeOwned`, so carrier-pigeon can't send it. Luckily
+`bevy-pigeon` provides a network-able `Transform` (along with other common components) in the `types` module. Put 
+together this looks like:
 ```rust
 use bevy::prelude::*;
 

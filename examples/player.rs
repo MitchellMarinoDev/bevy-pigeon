@@ -384,7 +384,7 @@ mod game {
     use crate::connecting::MyCId;
     use crate::GameState::Game;
     use crate::{
-        clean_up, MyConfig, Connection, DelPlayer, NewPlayer, RejectReason, Response, SystemSet,
+        clean_up, Connection, DelPlayer, MyConfig, NewPlayer, RejectReason, Response, SystemSet,
     };
     use bevy::prelude::*;
     use bevy::utils::HashMap;

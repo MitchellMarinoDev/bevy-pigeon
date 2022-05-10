@@ -20,4 +20,4 @@ mod app;
 pub mod sync;
 pub mod types;
 
-pub use app::*;
+pub use app::{AppExt, ClientPlugin, NetLabel, ServerPlugin};
