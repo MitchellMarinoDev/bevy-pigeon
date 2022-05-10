@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::marker::PhantomData;
 
-/// A component that tells `bevy-pigeon` to sync the component `T` which is sent as `M`.
+/// A component that tells `bevy_pigeon` to sync the component `T` which is sent as `M`.
 #[derive(Component, Copy, Clone, Eq, PartialEq, Debug, Hash)]
 pub struct NetComp<T, M = T>
 where

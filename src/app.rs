@@ -196,7 +196,7 @@ impl AppExt for App {
         T: Clone + Into<M> + Component,
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
-        let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
+        let id = "bevy_pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
 
         self.add_event::<SyncC<T>>();
@@ -218,7 +218,7 @@ impl AppExt for App {
         T: Clone + Into<M> + Component,
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
-        let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
+        let id = "bevy_pigeon::".to_owned() + std::any::type_name::<M>();
         table.register::<NetCompMsg<M>>(transport, &*id)?;
 
         self.add_event::<SyncC<T>>();
