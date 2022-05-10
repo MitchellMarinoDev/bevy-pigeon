@@ -68,11 +68,25 @@ pub fn server_tick(server: Option<ResMut<Server>>) {
 
 /// An extension trait for easy registering [`NetComp`] types.
 pub trait AppExt {
+    /// Adds everything needed to sync component `T` using message type `M`.
+    ///
+    /// Registers the type `NetCompMsg<M>` into `table` and adds the system required to sync
+    /// components of type `T`, using type `M` to send.
+    ///
+    /// Types `T` and `M` ***can*** be the same type; if the component `T` implements all the
+    /// required traits, you may use it as `M`.
+    ///
+    /// ### Panics
+    /// panics if `NetCompMsg<M>` is already registered in the table
+    /// (If you call this method twice with the same `M`).
     fn sync_comp<T, M>(&mut self, table: &mut MsgTable, transport: Transport) -> &mut Self
     where
         T: Clone + Into<M> + Component,
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
 
+    /// Adds everything needed to sync component `T` using message type `M`.
+    ///
+    /// Same as [`sync_comp()`](App::sync_comp), but doesn't panic in the event of a [`MsgRegError`].
     fn try_sync_comp<T, M>(
         &mut self,
         table: &mut MsgTable,
@@ -82,6 +96,17 @@ pub trait AppExt {
         T: Clone + Into<M> + Component,
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
 
+    /// Adds everything needed to sync component `T` using message type `M`.
+    ///
+    /// Registers the type `NetCompMsg<M>` into `table` and adds the system required to sync
+    /// components of type `T`, using type `M` to send.
+    ///
+    /// Types `T` and `M` ***can*** be the same type; if the component `T` implements all the
+    /// required traits, you may use it as `M`.
+    ///
+    /// ### Panics
+    /// panics if `NetCompMsg<M>` is already registered in the table
+    /// (If you call this method twice with the same `M`).
     fn sync_comp_sorted<T, M>(
         &mut self,
         table: &mut SortedMsgTable,
@@ -91,6 +116,9 @@ pub trait AppExt {
         T: Clone + Into<M> + Component,
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned;
 
+    /// Adds everything needed to sync component `T` using message type `M`.
+    ///
+    /// Same as [`sync_comp()`](App::sync_comp), but doesn't panic in the event of a [`MsgRegError`].
     fn try_sync_comp_sorted<T, M>(
         &mut self,
         table: &mut SortedMsgTable,
@@ -129,7 +157,7 @@ impl AppExt for App {
 
     /// Adds everything needed to sync component `T` using message type `M`.
     ///
-    /// Same as [`sync_comp()`](App::sync_comp), but doesnt panic in the event of a [`MsgRegError`].
+    /// Same as [`sync_comp()`](App::sync_comp), but doesn't panic in the event of a [`MsgRegError`].
     fn try_sync_comp<T, M>(
         &mut self,
         table: &mut MsgTable,
@@ -180,7 +208,7 @@ impl AppExt for App {
 
     /// Adds everything needed to sync component `T` using message type `M`.
     ///
-    /// Same as [`sync_comp()`](App::sync_comp), but doesnt panic in the event of a [`MsgRegError`].
+    /// Same as [`sync_comp()`](App::sync_comp), but doesn't panic in the event of a [`MsgRegError`].
     fn try_sync_comp_sorted<T, M>(
         &mut self,
         table: &mut SortedMsgTable,
@@ -239,8 +267,11 @@ fn send_on_event<T, M>(
     }
 }
 
-/// A system that syncs the component `T`.
-fn comp_send<T, M>(
+/// A system that sends component `T` using messages of type `M`.
+///
+/// Most of the time, you will call [`sync_comp`](AppExt::sync_comp) which will add this system.
+/// Only add it manually if you know what you are doing and want custom control over when it runs.
+pub fn comp_send<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
     q: Query<(&NetEntity, &NetComp<T, M>, &T, ChangeTrackers<T>)>,
@@ -281,7 +312,10 @@ fn comp_send<T, M>(
 }
 
 /// A system that receives messages of type `M` and applies it to component `T`.
-fn comp_recv<T, M>(
+///
+/// Most of the time, you will call [`sync_comp`](AppExt::sync_comp) which will add this system.
+/// Only add it manually if you know what you are doing and want custom control over when it runs.
+pub fn comp_recv<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,
     mut q: Query<(&NetEntity, &mut NetComp<T, M>, &mut T)>,
