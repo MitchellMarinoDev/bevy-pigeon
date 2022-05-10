@@ -10,7 +10,7 @@ use crate::menu::MenuPlugin;
 use crate::shared::*;
 use bevy::prelude::*;
 use bevy_pigeon::types::NetTransform;
-use bevy_pigeon::{AppExt, ClientPlugin, ServerPlugin};
+use bevy_pigeon::AppExt;
 use carrier_pigeon::{CId, Transport};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
@@ -63,10 +63,9 @@ fn main() {
     let parts = table.build::<Connection, Response, Disconnect>().unwrap();
     app.insert_resource(parts);
 
+    // Not adding client/server plugins in favor of custom systems.
     app.add_state(GameState::Menu)
         .add_plugins(DefaultPlugins)
-        .add_plugin(ClientPlugin)
-        .add_plugin(ServerPlugin)
         .add_startup_system(setup)
         .add_plugin(MenuPlugin)
         .add_plugin(ConnectingPlugin)
@@ -388,6 +387,7 @@ mod game {
     };
     use bevy::prelude::*;
     use bevy::utils::HashMap;
+    use bevy_pigeon::app::{client_tick, comp_recv, server_tick};
     use bevy_pigeon::sync::{CNetDir, NetComp, NetEntity, SNetDir};
     use bevy_pigeon::types::NetTransform;
     use bevy_pigeon::{NetLabel, SyncC};
@@ -419,9 +419,16 @@ mod game {
         fn build(&self, app: &mut App) {
             app.insert_resource(SyncTimer(Timer::from_seconds(0.5, true)))
                 .insert_resource(Players::default())
-                .add_system_set(SystemSet::on_enter(Game).with_system(setup_game))
+                .add_system_set(
+                    SystemSet::on_enter(Game)
+                        .with_system(setup_game)
+                        // Receive the new transform messages before the client/server tick systems clear it.
+                        .with_system(comp_recv::<Transform, NetTransform>.after(setup_game)),
+                )
                 .add_system_set(
                     SystemSet::on_update(Game)
+                        .with_system(client_tick.label(NetLabel))
+                        .with_system(server_tick.label(NetLabel))
                         .with_system(handle_cons.after(NetLabel))
                         .with_system(add_del_players.before(NetLabel))
                         .with_system(move_player)
