@@ -12,6 +12,7 @@
 - [x] Label systems.
 - [x] Advanced guide.
 - [x] To add a way to send a sync message ignoring the change detection likely through an event.
+- [ ] Look into making `comp_sync` and `comp_send` public.
 
 ## For v0.4.0:
 - [ ] Messages that only overwrite some data (requires custom trait).
