@@ -8,13 +8,11 @@
 //! - [EulerRot]
 
 use bevy::prelude::*;
-use bevy::reflect::FromReflect;
 use bevy::render::camera::{DepthCalculation, ScalingMode, WindowOrigin};
 use serde::{Deserialize, Serialize};
 
 /// The network-able version of [OrthographicProjection].
-#[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
-#[reflect(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetOrthographicProjection {
     pub left: f32,
     pub right: f32,
@@ -63,8 +61,7 @@ impl From<NetOrthographicProjection> for OrthographicProjection {
 }
 
 /// The network-able version of [Name].
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NetName {
     pub name: String,
 }
@@ -84,8 +81,7 @@ impl From<NetName> for Name {
 }
 
 /// The network-able version of [Visibility].
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetVisibility {
     pub is_visible: bool,
 }
@@ -107,8 +103,7 @@ impl From<NetVisibility> for Visibility {
 }
 
 /// The network-able version of [AlphaMode].
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum NetAlphaMode {
     Opaque,
     /// An alpha cutoff must be supplied where alpha values >= the cutoff
@@ -138,8 +133,7 @@ impl From<NetAlphaMode> for AlphaMode {
 }
 
 /// The network-able version of [EulerRot].
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum NetEulerRot {
     /// Intrinsic three-axis rotation ZYX
     ZYX,

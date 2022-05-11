@@ -5,12 +5,10 @@
 
 use crate::types::misc::NetOrthographicProjection;
 use bevy::prelude::*;
-use bevy::reflect::FromReflect;
 use serde::{Deserialize, Serialize};
 
 /// The network-able version of [AmbientLight].
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetAmbientLight {
     pub color: Color,
     /// A direct scale factor multiplied with `color` before being passed to the shader.
@@ -36,8 +34,7 @@ impl From<NetAmbientLight> for AmbientLight {
 }
 
 /// The network-able version of [DirectionalLight].
-#[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
-#[reflect(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetDirectionalLight {
     pub color: Color,
     /// Illuminance in lux
@@ -77,8 +74,7 @@ impl From<NetDirectionalLight> for DirectionalLight {
 }
 
 /// The network-able version of [PointLight].
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetPointLight {
     pub color: Color,
     pub intensity: f32,

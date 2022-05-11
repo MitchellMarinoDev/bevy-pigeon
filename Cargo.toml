@@ -17,7 +17,13 @@ name = "mvp"
 [[example]]
 name = "player"
 
+[dev-dependencies]
+bevy = "~0.7.0"
+
 [dependencies]
 carrier_pigeon = { git = "https://github.com/mitchellmarinodev/carrier_pigeon" }
-bevy = "~0.7.0"
+bevy = { version = "~0.7.0", default-features = false }
 serde = { version = "~1.0", features = ["derive"] }
+
+[features]
+types = ['bevy/render']

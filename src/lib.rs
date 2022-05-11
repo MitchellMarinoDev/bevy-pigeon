@@ -18,6 +18,7 @@
 #[warn(missing_debug_implementations, missing_copy_implementations)]
 pub mod app;
 pub mod sync;
+#[cfg(feature = "types")]
 pub mod types;
 
 pub use app::{AppExt, ClientPlugin, NetLabel, ServerPlugin, SyncC};

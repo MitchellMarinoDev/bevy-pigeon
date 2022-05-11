@@ -10,7 +10,6 @@
 
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
-use bevy::reflect::FromReflect;
 use serde::{Deserialize, Serialize};
 
 /// The network-able version of [Transform].
@@ -24,8 +23,7 @@ use serde::{Deserialize, Serialize};
 /// - [NetTransform2d]
 /// - [NetTransform2dTR]
 /// - [NetTransform2dT]
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetTransform {
     /// Position of the entity. In 2d, the last value of the `Vec3` is used for z-ordering.
     pub translation: Vec3,
@@ -68,8 +66,7 @@ impl From<NetTransform> for Transform {
 /// - [NetTransform2d]
 /// - [NetTransform2dTR]
 /// - [NetTransform2dT]
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetTransformTR {
     /// Position of the entity. In 2d, the last value of the `Vec3` is used for z-ordering.
     pub translation: Vec3,
@@ -109,8 +106,7 @@ impl From<NetTransformTR> for Transform {
 /// - [NetTransform2d]
 /// - [NetTransform2dTR]
 /// - [NetTransform2dT]
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetTransformT {
     /// Position of the entity. In 2d, the last value of the `Vec3` is used for z-ordering.
     pub translation: Vec3,
@@ -146,8 +142,7 @@ impl From<NetTransformT> for Transform {
 /// - [NetTransform2d]
 /// - [NetTransform2dTR]
 /// - [NetTransform2dT]
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetTransform2d {
     /// Position of the entity. In 2d, the last value of the `Vec3` is used for z-ordering.
     pub translation: Vec2,
@@ -190,8 +185,7 @@ impl From<NetTransform2d> for Transform {
 /// - [NetTransform2d]
 /// - [NetTransform2dTR]
 /// - [NetTransform2dT]
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetTransform2dTR {
     /// Position of the entity. In 2d, the last value of the `Vec3` is used for z-ordering.
     pub translation: Vec2,
@@ -232,8 +226,7 @@ impl From<NetTransform2dTR> for Transform {
 /// - [NetTransform2d]
 /// - [NetTransform2dTR]
 /// - [NetTransform2dT]
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Reflect, FromReflect)]
-#[reflect(PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetTransform2dT {
     /// Position of the entity. In 2d, the last value of the `Vec3` is used for z-ordering.
     pub translation: Vec2,
