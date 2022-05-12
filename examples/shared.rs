@@ -5,6 +5,8 @@
 use carrier_pigeon::{CId, MsgTable};
 use serde::{Deserialize, Serialize};
 
+pub const ADDR_LOCAL: &str = "127.0.0.1:7777";
+
 pub fn get_table() -> MsgTable {
     let table = MsgTable::new();
 

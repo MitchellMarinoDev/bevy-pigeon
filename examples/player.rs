@@ -17,8 +17,6 @@ use std::net::SocketAddr;
 
 mod shared;
 
-const ADDR_LOCAL: &str = "127.0.0.1:7777";
-
 #[derive(Clone, Eq, PartialEq, Debug)]
 struct MyConfig {
     ip: SocketAddr,

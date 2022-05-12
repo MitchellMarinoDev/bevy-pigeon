@@ -14,8 +14,6 @@ use carrier_pigeon::net::Config;
 use carrier_pigeon::{Client, Server, Transport};
 use std::f32::consts::PI;
 
-const ADDR_LOCAL: &str = "127.0.0.1:7777";
-
 #[derive(Component, Copy, Clone, Eq, PartialEq, Hash)]
 struct Spin;
 
