@@ -55,7 +55,7 @@ fn main() {
     let conf = MyConfig { ip, user, pass };
     app.insert_resource(conf);
 
-    // Tell bevy_pigeon to sync the Transform component using the NetTransform message type.
+    // Tell bevy-pigeon to sync the Transform component using the NetTransform message type.
     app.sync_comp::<Transform, NetTransform>(&mut table, Transport::UDP);
 
     let parts = table.build::<Connection, Response, Disconnect>().unwrap();

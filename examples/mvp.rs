@@ -1,6 +1,6 @@
 //! The "Minimum Viable Product".
 //!
-//! The most minimal bevy app that shows almost all of `bevy_pigeon`'s features without much
+//! The most minimal bevy app that shows almost all of `bevy-pigeon`'s features without much
 //! other code to distract from the net-code.
 
 mod shared;
@@ -21,7 +21,7 @@ fn main() {
     let mut app = App::new();
     let mut table = get_table();
 
-    // Tell bevy_pigeon to sync the Transform component using the NetTransform message type.
+    // Tell bevy-pigeon to sync the Transform component using the NetTransform message type.
     app.sync_comp::<Transform, NetTransform>(&mut table, Transport::UDP);
 
     let parts = table.build::<Connection, Response, Disconnect>().unwrap();

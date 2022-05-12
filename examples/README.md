@@ -1,6 +1,6 @@
 # Examples
 
-- [MVP](examples/mvp.rs): The most minimal bevy app that shows almost all of `bevy_pigeon`'s features without much
+- [MVP](examples/mvp.rs): The most minimal bevy app that shows almost all of `bevy-pigeon`'s features without much
 other code to distract from the net-code.
     - Defaults to a server. To change this, run `cargo run --example mvp -- client`.
 - [player](examples/player.rs): A simple example where every client connection spawns a player, 

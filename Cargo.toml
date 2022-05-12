@@ -1,11 +1,11 @@
 [package]
-name = "bevy_pigeon"
+name = "bevy-pigeon"
 version = "0.3.0"
 authors = ["Mitchell Marino <mitchoah@gmail.com>"]
 edition = "2021"
-description = "The bevy plugin for carrier_pigeon."
+description = "The bevy plugin for carrier-pigeon."
 readme = "README.md"
-repository = "https://github.com/MitchellMarinoDev/bevy_pigeon/"
+repository = "https://github.com/MitchellMarinoDev/bevy-pigeon/"
 license = "MIT OR Apache-2.0"
 keywords = ["game", "gamedev", "networking", "bevy"]
 categories = ["game-development", "network-programming"]
@@ -21,7 +21,7 @@ name = "player"
 bevy = "~0.7.0"
 
 [dependencies]
-carrier_pigeon = { git = "https://github.com/mitchellmarinodev/carrier_pigeon" }
+carrier-pigeon = { git = "https://github.com/mitchellmarinodev/carrier-pigeon" }
 bevy = { version = "~0.7.0", default-features = false }
 serde = { version = "~1.0", features = ["derive"] }
 

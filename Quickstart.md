@@ -1,14 +1,14 @@
 # Quickstart guide
 
-This will walk you through what you need to know to use `bevy_pigeon`.
+This will walk you through what you need to know to use `bevy-pigeon`.
 
-This guide assumes some familiarity with `carrier_pigeon`. Reading `carrier_pigeon`'s quickstart should do it.
+This guide assumes some familiarity with `carrier-pigeon`. Reading `carrier-pigeon`'s quickstart should do it.
 
 ## Client or Server
 
-`bevy_pigeon` systems operate on `carrier_pigeon`s Client and Server as resources. You will need to create a client,
-server, or both and add them to the app's resources in order for `bevy_pigeon`s systems to work.  To do this, see
-`carrier_pigeon`s documentation.
+`bevy-pigeon` systems operate on `carrier-pigeon`s Client and Server as resources. You will need to create a client,
+server, or both and add them to the app's resources in order for `bevy-pigeon`s systems to work.  To do this, see
+`carrier-pigeon`s documentation.
 
 ## Plugin
 
@@ -21,7 +21,7 @@ make your own systems entirely.
 
 ## NetEntity
 
-`bevy_pigeon` needs some way of knowing what entity on one game instance corresponds with what entity on another
+`bevy-pigeon` needs some way of knowing what entity on one game instance corresponds with what entity on another
 instance. pigeon's solution to this is the `NetEntity` component. The `NetEntity` component simply contains a `u64`
 as an identifier. To link entities across instances, they both need to have the component `NetEntity` with the same id.
 
@@ -49,13 +49,13 @@ So back to the `NetComp` component. To sync our entity's `Transform` from the se
 `entity.insert(NetComp::<Transform>::new(CNetDir::From, SNetDir::To(CIdSpec::All)))`.
 It also needs the `NetEntity` component, so do `entity.insert(NetEntity::new(9414351989064014771))`.
 
-Lastly we need to tell `bevy_pigeon` to add the system that syncs the transforms for us. When building the app, add
+Lastly we need to tell `bevy-pigeon` to add the system that syncs the transforms for us. When building the app, add
 `app.sync_comp::<Transform, Transfrom>(&mut table, Transport::UDP)` passing in a reference to your `MsgTable`.
 This will add as system to send and receive these components, and register the `Transform` type to be sent 
-through `carrier_pigeon`.
+through `carrier-pigeon`.
 
-However, `Transform` doesn't implement serde's `Serialize + DeserializeOwned`, so carrier_pigeon can't send it. Luckily
-`bevy_pigeon` provides a network-able `Transform` (along with other common components) in the `types` module. Put 
+However, `Transform` doesn't implement serde's `Serialize + DeserializeOwned`, so carrier-pigeon can't send it. Luckily
+`bevy-pigeon` provides a network-able `Transform` (along with other common components) in the `types` module. Put 
 together this looks like:
 ```rust
 use bevy::prelude::*;
@@ -64,7 +64,7 @@ fn main() {
     let mut app = App::new();
     let mut table = MsgTable::new();
 
-    // Tell bevy_pigeon to sync the Transform component using the NetTransform message type.
+    // Tell bevy-pigeon to sync the Transform component using the NetTransform message type.
     app.sync_comp::<Transform, NetTransform>(&mut table, Transport::UDP);
 
     let parts = table.build::<Connection, Response, Disconnect>().unwrap();
