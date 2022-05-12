@@ -528,7 +528,7 @@ mod game {
     ) {
         if let Some(mut server) = server {
             let mut discon = vec![];
-            server.handle_disconnects(&mut |cid, status| {
+            server.handle_disconnects(|cid, status| {
                 info!("Connection {cid} disconnected with status: \"{status}\"");
                 discon.push(cid);
             });
@@ -538,7 +538,7 @@ mod game {
             }
 
             let mut new_players = vec![];
-            server.handle_new_cons(&mut |cid, con: Connection| {
+            server.handle_new_cons(|cid, con: Connection| {
                 if con.pass != conf.pass {
                     (false, Response::Rejected(RejectReason::IncorrectPassword))
                 } else if players.0.len() > 2 {

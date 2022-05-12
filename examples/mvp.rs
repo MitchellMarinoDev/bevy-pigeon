@@ -119,8 +119,8 @@ fn spin(server: Option<Res<Server>>, mut q_spin: Query<&mut Transform, With<Spin
 /// Handles new connections and disconnections.
 fn handle_discon_con(server: Option<ResMut<Server>>) {
     if let Some(mut server) = server {
-        server.handle_new_cons(&mut |cid, _c: Connection| (true, Response::Accepted(cid)));
-        server.handle_disconnects(&mut |cid, status| {
+        server.handle_new_cons(|cid, _c: Connection| (true, Response::Accepted(cid)));
+        server.handle_disconnects(|cid, status| {
             info!("Client {cid} disconnected with status: {status}");
         });
     }
