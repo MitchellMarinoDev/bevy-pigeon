@@ -44,9 +44,9 @@ still use `carrier-pigeon`'s message system; the component syncing is purely an 
 
 The documentation can be found on [Docs.rs](https://docs.rs/bevy-pigeon)
 
-A quickstart guide that goes in more detail is found at [/Quickstart.md](Quickstart.md)
+A quickstart guide that goes in more detail is found at [/quickstart.md](quickstart.md)
 
-An in depth guide to the more advanced features is found at [/Advanced.md](Advanced.md)
+An in depth guide to the more advanced features is found at [/advanced.md](advanced.md)
 
 ### Examples
 
