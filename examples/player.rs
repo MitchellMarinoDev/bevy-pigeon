@@ -385,7 +385,7 @@ mod game {
     };
     use bevy::prelude::*;
     use bevy::utils::HashMap;
-    use bevy_pigeon::app::{client_tick, comp_recv, server_tick};
+    use bevy_pigeon::app::{client_tick, server_tick};
     use bevy_pigeon::sync::{CNetDir, NetComp, NetEntity, SNetDir};
     use bevy_pigeon::types::NetTransform;
     use bevy_pigeon::{NetLabel, SyncC};
@@ -420,17 +420,16 @@ mod game {
                 .add_system_set(
                     SystemSet::on_enter(Game)
                         .with_system(setup_game)
-                        // Receive the new transform messages before the client/server tick systems clear it.
-                        .with_system(comp_recv::<Transform, NetTransform>.after(setup_game)),
                 )
                 .add_system_set(
                     SystemSet::on_update(Game)
+                        // Only tick client and server when game is running.
                         .with_system(client_tick.label(NetLabel))
                         .with_system(server_tick.label(NetLabel))
+
                         .with_system(handle_cons.after(NetLabel))
-                        .with_system(add_del_players.before(NetLabel))
+                        .with_system(add_del_players.after(NetLabel))
                         .with_system(move_player)
-                        .with_system(sync),
                 )
                 .add_system_set(SystemSet::on_exit(Game).with_system(clean_up::<GameItem>));
         }
@@ -505,22 +504,12 @@ mod game {
         }
     }
 
-    /// Syncs the transforms every 0.5 seconds
-    fn sync(
-        time: Res<Time>,
-        mut timer: ResMut<SyncTimer>,
-        mut ew_sync_transform: EventWriter<SyncC<Transform>>,
-    ) {
-        if timer.0.tick(time.delta()).just_finished() {
-            ew_sync_transform.send(SyncC::default());
-        }
-    }
-
     fn handle_cons(
         my_cid: Option<Res<MyCId>>,
         conf: Res<MyConfig>,
         mut players: ResMut<Players>,
         server: Option<ResMut<Server>>,
+        mut ew_sync_transform: EventWriter<SyncC<Transform>>,
         // For spawning player
         mut commands: Commands,
         mut meshes: ResMut<Assets<Mesh>>,
@@ -554,6 +543,10 @@ mod game {
                 for p_cid in players.0.keys() {
                     server.send_to(cid, &NewPlayer(*p_cid)).unwrap();
                 }
+
+                // Force a sync of the players so the new player has updated positions.
+                ew_sync_transform.send(SyncC::default());
+
                 // Tell the other players about the new player.
                 server
                     .send_spec(CIdSpec::Except(cid), &NewPlayer(cid))

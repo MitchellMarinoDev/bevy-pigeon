@@ -149,9 +149,9 @@ impl AppExt for App {
         table.register::<NetCompMsg<M>>(transport).unwrap();
 
         self.add_event::<SyncC<T>>();
-        self.add_system(send_on_event::<T, M>.label(NetLabel));
-        self.add_system(comp_send::<T, M>.label(NetLabel));
-        self.add_system(comp_recv::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::Last, send_on_event::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::Last, comp_send::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::First, comp_recv::<T, M>.label(NetLabel));
         self
     }
 
@@ -170,9 +170,9 @@ impl AppExt for App {
         table.register::<NetCompMsg<M>>(transport)?;
 
         self.add_event::<SyncC<T>>();
-        self.add_system(send_on_event::<T, M>.label(NetLabel));
-        self.add_system(comp_send::<T, M>.label(NetLabel));
-        self.add_system(comp_recv::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::Last, send_on_event::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::Last, comp_send::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::First, comp_recv::<T, M>.label(NetLabel));
         Ok(self)
     }
 
@@ -200,9 +200,9 @@ impl AppExt for App {
         table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
 
         self.add_event::<SyncC<T>>();
-        self.add_system(send_on_event::<T, M>.label(NetLabel));
-        self.add_system(comp_send::<T, M>.label(NetLabel));
-        self.add_system(comp_recv::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::Last, send_on_event::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::Last, comp_send::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::First, comp_recv::<T, M>.label(NetLabel));
         self
     }
 
@@ -222,9 +222,9 @@ impl AppExt for App {
         table.register::<NetCompMsg<M>>(transport, &*id)?;
 
         self.add_event::<SyncC<T>>();
-        self.add_system(send_on_event::<T, M>.label(NetLabel));
-        self.add_system(comp_send::<T, M>.label(NetLabel));
-        self.add_system(comp_recv::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::Last, send_on_event::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::Last, comp_send::<T, M>.label(NetLabel));
+        self.add_system_to_stage(CoreStage::First, comp_recv::<T, M>.label(NetLabel));
         Ok(self)
     }
 }
