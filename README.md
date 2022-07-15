@@ -22,7 +22,14 @@ Building on `carrier-pigeon`, this crate provides high level network abstraction
 Since carrier-pigeon uses TCP and UDP, it is usable and convenient for most all games. FPS games (and other games where
 precise position is of the upmost importance) would benefit from a backroll solution like 
 [bevy_backroll](https://crates.io/crates/bevy_backroll) or [bevy_ggrs](https://github.com/gschup/bevy_ggrs).
-Though, it is certainly possible to make an FPS with `bevy-pigeon`
+Though, it is certainly possible to make an FPS with `bevy-pigeon`.
+carrier-pigeon does not do any encryption, so for any game where security is needed (any other than a friendly co-op game)
+you may want to look elsewhere.
+
+carrier-pigeon/bevy-pigeon were made as a hobby project mostly to learn; there are likely some fun bugs to be found. I 
+believe it is in a usable state, but there are likely better solutions. I am somewhat proud of the automatic component 
+syncing in this project. If you would like to put this in a more activly developed bevy networking lib, feel free to use 
+this as a referance/ for ideas. If you have any questions about the implemenation, feel free to ask.
 
 TCP is required for the connection cycle in carrier-pigeon, so if you want to target wasm, pigeon will not work for you.
 
