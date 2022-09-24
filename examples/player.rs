@@ -368,9 +368,7 @@ mod connecting {
                     style: Style {
                         margin: UiRect {
                             bottom: Val::Px(0.0),
-                            top: Val::Px(20.0),
-                            left: Val::Px(20.0),
-                            right: Val::Px(20.0),
+                            ..UiRect::all(Val::Px(20.0))
                         },
                         ..default()
                     },
