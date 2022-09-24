@@ -73,13 +73,19 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     // Camera
-    commands.spawn_bundle(PerspectiveCameraBundle {
+    commands.spawn_bundle(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 10.0, 10.0).looking_at(Vec3::default(), Vec3::Y),
-        ..PerspectiveCameraBundle::new_3d()
+        ..Camera3dBundle::default()
+    })
+    .insert(UiCameraConfig {
+        show_ui: true
     });
 
-    // UI Camera
-    commands.spawn_bundle(UiCameraBundle::default());
+
+    commands.spawn_bundle(PointLightBundle {
+        transform: Transform::from_xyz(0.0, 10.0, 0.0),
+        ..default()
+    });
 }
 
 /// A generic clean up system.
@@ -170,7 +176,7 @@ mod menu {
         };
         let button_style = Style {
             size: Size::new(Val::Px(1000.0), Val::Px(100.0)),
-            margin: Rect::all(Val::Px(20.0)),
+            margin: UiRect::all(Val::Px(20.0)),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..default()
@@ -180,8 +186,8 @@ mod menu {
             .spawn_bundle(NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    margin: Rect::all(Val::Auto),
-                    padding: Rect::all(Val::Px(10.0)),
+                    margin: UiRect::all(Val::Auto),
+                    padding: UiRect::all(Val::Px(10.0)),
                     flex_direction: FlexDirection::ColumnReverse,
                     align_items: AlignItems::Center,
                     align_self: AlignSelf::Center,
@@ -199,20 +205,19 @@ mod menu {
                 // Title
                 parent.spawn_bundle(TextBundle {
                     style: Style {
-                        margin: Rect {
+                        margin: UiRect {
                             bottom: Val::Px(0.0),
-                            ..Rect::all(Val::Px(20.0))
+                            ..UiRect::all(Val::Px(20.0))
                         },
                         ..default()
                     },
-                    text: Text::with_section(
+                    text: Text::from_section(
                         "Player Example",
                         TextStyle {
                             color: Color::WHITE,
                             font_size: 100.0,
                             ..text_style.clone()
                         },
-                        TextAlignment::default(),
                     ),
                     ..default()
                 });
@@ -227,10 +232,9 @@ mod menu {
                     .insert(MenuButton::Server)
                     .with_children(|parent| {
                         parent.spawn_bundle(TextBundle {
-                            text: Text::with_section(
+                            text: Text::from_section(
                                 "Start Server",
                                 text_style.clone(),
-                                TextAlignment::default(),
                             ),
                             ..Default::default()
                         });
@@ -246,10 +250,9 @@ mod menu {
                     .insert(MenuButton::Host)
                     .with_children(|parent| {
                         parent.spawn_bundle(TextBundle {
-                            text: Text::with_section(
+                            text: Text::from_section(
                                 "Start Host",
                                 text_style.clone(),
-                                TextAlignment::default(),
                             ),
                             ..Default::default()
                         });
@@ -265,10 +268,9 @@ mod menu {
                     .insert(MenuButton::Client)
                     .with_children(|parent| {
                         parent.spawn_bundle(TextBundle {
-                            text: Text::with_section(
+                            text: Text::from_section(
                                 "Start Client",
                                 text_style,
-                                TextAlignment::default(),
                             ),
                             ..Default::default()
                         });
@@ -346,8 +348,8 @@ mod connecting {
             .spawn_bundle(NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    margin: Rect::all(Val::Auto),
-                    padding: Rect::all(Val::Px(10.0)),
+                    margin: UiRect::all(Val::Auto),
+                    padding: UiRect::all(Val::Px(10.0)),
                     flex_direction: FlexDirection::ColumnReverse,
                     align_items: AlignItems::Center,
                     align_self: AlignSelf::Center,
@@ -364,13 +366,15 @@ mod connecting {
             .with_children(|parent| {
                 parent.spawn_bundle(TextBundle {
                     style: Style {
-                        margin: Rect {
+                        margin: UiRect {
                             bottom: Val::Px(0.0),
-                            ..Rect::all(Val::Px(20.0))
+                            top: Val::Px(20.0),
+                            left: Val::Px(20.0),
+                            right: Val::Px(20.0),
                         },
                         ..default()
                     },
-                    text: Text::with_section("Connecting...", text_style, TextAlignment::default()),
+                    text: Text::from_section("Connecting...", text_style),
                     ..default()
                 });
             });
