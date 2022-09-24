@@ -10,12 +10,13 @@ Building on `carrier-pigeon`, this crate provides high level network abstraction
 
 ### Add bevy-pigeon to your `Cargo.toml`:
 
-`bevy-pigeon = "0.3.0"`
+`bevy-pigeon = "0.4.0"`
 
 ## Compatibility
 | `bevy` | `bevy-pigeon` | `carrier-pigeon` |
 |:------:|:-------------:|:----------------:|
 |  0.7   |      0.3      |       0.3        |
+|  0.8   |      0.3      |       0.3        |
 
 ## Is bevy-pigeon right for me?
 
