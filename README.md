@@ -16,7 +16,7 @@ Building on `carrier-pigeon`, this crate provides high level network abstraction
 | `bevy` | `bevy-pigeon` | `carrier-pigeon` |
 |:------:|:-------------:|:----------------:|
 |  0.7   |      0.3      |       0.3        |
-|  0.8   |      0.3      |       0.3        |
+|  0.8   |      0.4      |       0.4        |
 
 ## Is bevy-pigeon right for me?
 
