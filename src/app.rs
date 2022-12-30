@@ -197,7 +197,7 @@ impl AppExt for App {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
-        table.register::<NetCompMsg<M>>(transport, &*id).unwrap();
+        table.register::<NetCompMsg<M>>(transport, &id).unwrap();
 
         self.add_event::<SyncC<T>>();
         self.add_system_to_stage(CoreStage::Last, send_on_event::<T, M>.label(NetLabel));
@@ -219,7 +219,7 @@ impl AppExt for App {
         M: Clone + Into<T> + Any + Send + Sync + Serialize + DeserializeOwned,
     {
         let id = "bevy-pigeon::".to_owned() + std::any::type_name::<M>();
-        table.register::<NetCompMsg<M>>(transport, &*id)?;
+        table.register::<NetCompMsg<M>>(transport, &id)?;
 
         self.add_event::<SyncC<T>>();
         self.add_system_to_stage(CoreStage::Last, send_on_event::<T, M>.label(NetLabel));
@@ -361,7 +361,7 @@ pub fn comp_recv<T, M>(
 /// Helper function that gets the most recent message that matches `from_spec` for entity with `id`
 /// if it is sent later that current.
 fn get_latest_msg<'a, M: Any + Send + Sync>(
-    msgs: &'a Vec<NetMsg<NetCompMsg<M>>>,
+    msgs: &'a [NetMsg<NetCompMsg<M>>],
     current: Option<u32>,
     spec: CIdSpec,
     id: u64,

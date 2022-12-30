@@ -15,7 +15,7 @@
 //! [`examples/` directory](https://github.com/MitchellMarinoDev/carrier-pigeon/blob/main/examples)
 //! on the GitHub repo.
 
-#[warn(missing_debug_implementations, missing_copy_implementations)]
+#![warn(missing_debug_implementations, missing_copy_implementations)]
 pub mod app;
 pub mod sync;
 #[cfg(feature = "types")]
