@@ -18,12 +18,12 @@ name = "mvp"
 name = "player"
 
 [dev-dependencies]
-bevy = "~0.8.0"
+bevy = "0.9"
 
 [dependencies]
-carrier-pigeon = "~0.3"
-bevy = { version = "~0.8.0", default-features = false }
-serde = { version = "~1.0", features = ["derive"] }
+carrier-pigeon = { git = "https://github.com/MitchellMarinoDev/carrier-pigeon", features = ["bevy"] }
+bevy = { version = "0.9", default-features = false }
+serde = { version = "1.0", features = ["derive"] }
 
 [features]
 default = ["types"]

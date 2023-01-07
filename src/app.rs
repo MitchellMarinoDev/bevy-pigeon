@@ -271,6 +271,7 @@ fn send_on_event<T, M>(
 ///
 /// Most of the time, you will call [`sync_comp`](AppExt::sync_comp) which will add this system.
 /// Only add it manually if you know what you are doing and want custom control over when it runs.
+#[allow(clippy::type_complexity)]
 pub fn comp_send<T, M>(
     server: Option<ResMut<Server>>,
     client: Option<ResMut<Client>>,

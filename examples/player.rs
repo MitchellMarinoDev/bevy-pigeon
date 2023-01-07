@@ -17,7 +17,7 @@ use std::net::SocketAddr;
 
 mod shared;
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Resource, Clone, Eq, PartialEq, Debug)]
 struct MyConfig {
     ip: SocketAddr,
     user: String,
@@ -73,16 +73,14 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     // Camera
-    commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 10.0, 10.0).looking_at(Vec3::default(), Vec3::Y),
-        ..Camera3dBundle::default()
-    })
-    .insert(UiCameraConfig {
-        show_ui: true
-    });
+    commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_xyz(0.0, 10.0, 10.0).looking_at(Vec3::default(), Vec3::Y),
+            ..Camera3dBundle::default()
+        })
+        .insert(UiCameraConfig { show_ui: true });
 
-
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..default()
     });
@@ -183,7 +181,7 @@ mod menu {
         };
 
         commands
-            .spawn_bundle(NodeBundle {
+            .spawn(NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
                     margin: UiRect::all(Val::Auto),
@@ -197,13 +195,13 @@ mod menu {
                     },
                     ..default()
                 },
-                color: Color::CRIMSON.into(),
+                background_color: Color::CRIMSON.into(),
                 ..default()
             })
             .insert(MenuItem)
             .with_children(|parent| {
                 // Title
-                parent.spawn_bundle(TextBundle {
+                parent.spawn(TextBundle {
                     style: Style {
                         margin: UiRect {
                             bottom: Val::Px(0.0),
@@ -223,55 +221,46 @@ mod menu {
                 });
 
                 parent
-                    .spawn_bundle(ButtonBundle {
-                        color: UiColor(Color::rgb_u8(255, 255, 255)),
+                    .spawn(ButtonBundle {
+                        background_color: BackgroundColor(Color::rgb_u8(255, 255, 255)),
                         style: button_style.clone(),
                         // transform: Transform::from_xyz(100.0, 0.0, 0.0),
                         ..Default::default()
                     })
                     .insert(MenuButton::Server)
                     .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle {
-                            text: Text::from_section(
-                                "Start Server",
-                                text_style.clone(),
-                            ),
+                        parent.spawn(TextBundle {
+                            text: Text::from_section("Start Server", text_style.clone()),
                             ..Default::default()
                         });
                     });
 
                 parent
-                    .spawn_bundle(ButtonBundle {
-                        color: UiColor(Color::rgb_u8(255, 255, 255)),
+                    .spawn(ButtonBundle {
+                        background_color: BackgroundColor(Color::rgb_u8(255, 255, 255)),
                         style: button_style.clone(),
                         // transform: Transform::from_xyz(100.0, 0.0, 0.0),
                         ..Default::default()
                     })
                     .insert(MenuButton::Host)
                     .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle {
-                            text: Text::from_section(
-                                "Start Host",
-                                text_style.clone(),
-                            ),
+                        parent.spawn(TextBundle {
+                            text: Text::from_section("Start Host", text_style.clone()),
                             ..Default::default()
                         });
                     });
 
                 parent
-                    .spawn_bundle(ButtonBundle {
-                        color: UiColor(Color::rgb_u8(255, 255, 255)),
+                    .spawn(ButtonBundle {
+                        background_color: BackgroundColor(Color::rgb_u8(255, 255, 255)),
                         style: button_style,
                         // transform: Transform::from_xyz(100.0, 0.0, 0.0),
                         ..Default::default()
                     })
                     .insert(MenuButton::Client)
                     .with_children(|parent| {
-                        parent.spawn_bundle(TextBundle {
-                            text: Text::from_section(
-                                "Start Client",
-                                text_style,
-                            ),
+                        parent.spawn(TextBundle {
+                            text: Text::from_section("Start Client", text_style),
                             ..Default::default()
                         });
                     });
@@ -285,7 +274,7 @@ mod connecting {
     use bevy::prelude::*;
     use carrier_pigeon::{CId, OptionPendingClient, Server};
 
-    #[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
+    #[derive(Resource, Copy, Clone, Eq, PartialEq, Debug, Hash)]
     pub struct MyCId(pub CId);
 
     /// A marker component so that we can clean up easily.
@@ -345,7 +334,7 @@ mod connecting {
         };
 
         commands
-            .spawn_bundle(NodeBundle {
+            .spawn(NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
                     margin: UiRect::all(Val::Auto),
@@ -359,12 +348,12 @@ mod connecting {
                     },
                     ..default()
                 },
-                color: Color::CRIMSON.into(),
+                background_color: Color::CRIMSON.into(),
                 ..default()
             })
             .insert(ConnectingItem)
             .with_children(|parent| {
-                parent.spawn_bundle(TextBundle {
+                parent.spawn(TextBundle {
                     style: Style {
                         margin: UiRect {
                             bottom: Val::Px(0.0),
@@ -403,11 +392,11 @@ mod game {
     #[derive(Clone, Debug, Default, Component)]
     struct MyPlayer;
 
-    #[derive(Clone, Debug, Default)]
+    #[derive(Resource, Clone, Debug, Default)]
     struct SyncTimer(Timer);
 
     /// Maps a connection ID to a username.
-    #[derive(Clone, Debug, Default)]
+    #[derive(Resource, Clone, Debug, Default)]
     struct Players(pub HashMap<CId, String>);
 
     /// A marker component so that we can clean up easily.
@@ -417,21 +406,17 @@ mod game {
     pub struct GamePlugin;
     impl Plugin for GamePlugin {
         fn build(&self, app: &mut App) {
-            app.insert_resource(SyncTimer(Timer::from_seconds(0.5, true)))
+            app.insert_resource(SyncTimer(Timer::from_seconds(0.5, TimerMode::Repeating)))
                 .insert_resource(Players::default())
-                .add_system_set(
-                    SystemSet::on_enter(Game)
-                        .with_system(setup_game)
-                )
+                .add_system_set(SystemSet::on_enter(Game).with_system(setup_game))
                 .add_system_set(
                     SystemSet::on_update(Game)
                         // Only tick client and server when game is running.
                         .with_system(client_tick.label(NetLabel))
                         .with_system(server_tick.label(NetLabel))
-
                         .with_system(handle_cons.after(NetLabel))
                         .with_system(add_del_players.after(NetLabel))
-                        .with_system(move_player)
+                        .with_system(move_player),
                 )
                 .add_system_set(SystemSet::on_exit(Game).with_system(clean_up::<GameItem>));
         }
@@ -444,7 +429,7 @@ mod game {
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
         // Ground plane.
-        commands.spawn_bundle(PbrBundle {
+        commands.spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Plane { size: 10.0 })),
             material: materials.add(StandardMaterial {
                 base_color: Color::WHITE,
@@ -588,7 +573,7 @@ mod game {
         };
 
         let id = commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                 material: materials.add(StandardMaterial {
                     base_color: Color::PINK,
